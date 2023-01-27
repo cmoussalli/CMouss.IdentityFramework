@@ -8,6 +8,9 @@
 DB Context already included with a lot of extra features.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.0.15</Version>
+    <Title>CMouss.IdentityFramework</Title>
+    <PackageProjectUrl>https://github.com/cmoussalli/CMouss.IdentityFramework</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/cmoussalli/CMouss.IdentityFramework</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
