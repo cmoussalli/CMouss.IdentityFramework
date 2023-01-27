@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Authors>Caesar Moussalli</Authors>
+    <PackageTags>Identity Framework</PackageTags>
+    <Description>Complete Identity Framework, supports: Roles, Permissions (Entity-Action based), Tokens and Apps.
+DB Context already included with a lot of extra features.</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.15</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Errors\" />
+  </ItemGroup>
+
+  <Import Project="..\CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems" Label="Shared" />
+
+</Project>

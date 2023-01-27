@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CMouss.IdentityFramework.UserService">
+    <Position X="1.75" Y="1.75" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>kAQQAAAIACAAgAAAAABAAAAAAAEIAECACkAAAAAEACA=</HashCode>
+      <FileName>Services\UserService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.UserTokenService">
+    <Position X="5.25" Y="1.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAEAAEAAAAAAAAAAAEA=</HashCode>
+      <FileName>Services\UserTokenService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.PermissionTypeService">
+    <Position X="7.75" Y="1.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAEIAEAAAgAAAAAAAAA=</HashCode>
+      <FileName>Services\PermissionTypeService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.PermissionService">
+    <Position X="7.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAEIAEAAAgAAAAAAAAA=</HashCode>
+      <FileName>Services\PermissionService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.EntityService">
+    <Position X="12.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAEIAEAAAgAAAAAAAAA=</HashCode>
+      <FileName>Services\EntityService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.AttributeTypeService">
+    <Position X="5.25" Y="3.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAEIAEAAAgAAAAAAAAA=</HashCode>
+      <FileName>Services\AttributeTypeService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.AppService">
+    <Position X="10.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAEIAEAAAgAAAAAAAAA=</HashCode>
+      <FileName>Services\AppService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMouss.IdentityFramework.AppAccessService">
+    <Position X="10.25" Y="3.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAgAAAAAAEAAEAAAgAAAEAAAAA=</HashCode>
+      <FileName>Services\AppAccessService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

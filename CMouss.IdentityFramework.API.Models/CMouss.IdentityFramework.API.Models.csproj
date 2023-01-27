@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.0.14</Version>
+    <Authors>Caesar Moussalli</Authors>
+  </PropertyGroup>
+
+  <Import Project="..\CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems" Label="Shared" />
+
+</Project>
