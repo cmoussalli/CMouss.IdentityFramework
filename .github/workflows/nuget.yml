@@ -1,0 +1,39 @@
+name: Publish to NuGet
+on:
+  push:
+    tags:
+    - nuget*
+  
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v3
+        with: 
+          dotnet-version: 6.0.x
+      - run: dotnet clean
+      - name: 'Restore packages'
+        run: dotnet restore CMouss.IdentityFramework/CMouss.IdentityFramework.csproj
+      - name: 'Build project'
+        run: dotnet build CMouss.IdentityFramework/CMouss.IdentityFramework.csproj --no-restore
+      - name: 'Restore packages'
+        run: dotnet restore CMouss.IdentityFramework.API.Models/CMouss.IdentityFramework.API.Models.csproj
+      - name: 'Build project'
+        run: dotnet build CMouss.IdentityFramework.API.Models/CMouss.IdentityFramework.API.Models.csproj --no-restore
+      - name: 'Restore packages'
+        run: dotnet restore CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj
+      - name: 'Build project'
+        run: dotnet build CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj --no-restore
+      
+      - name: 'Pack project'
+        run: dotnet pack CMouss.IdentityFramework/CMouss.IdentityFramework.csproj --no-restore --no-build --configuration Debug --output output
+
+      - name: 'Pack project'
+        run: dotnet pack CMouss.IdentityFramework.API.Models/CMouss.IdentityFramework.API.Models.csproj --no-restore --no-build --configuration Debug --output output
+
+      - name: 'Pack project'
+        run: dotnet pack CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj --no-restore --no-build --configuration Debug --output output
+
+      - name: "Push package"
+        run: dotnet nuget push output\*.nupkg -k ${{ secrets.NUGETKEY }} -s https://api.nuget.org/v3/index.json
