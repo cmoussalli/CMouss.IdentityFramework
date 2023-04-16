@@ -69,6 +69,30 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
         }
         #endregion
 
+        #region Validate UserTooken
+        [HttpPost]
+        [Route(APIRoutes.User.ValidateToken)]
+        public IActionResult ValidateToken(
+             [FromHeader] string token
+        )
+        {
+            API.Models.UserToken result = new();
+            try
+            {
+                UserToken dbUserToken = IDFManager.UserTokenServices.Validate(token);
+                if (dbUserToken is not null)
+                {
+                    return Ok(Converters.UserTokenConverter.ToAPIUserToken(dbUserToken));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return NotFound();
+        }
+        #endregion
+
 
         #region Search
         [HttpPost]

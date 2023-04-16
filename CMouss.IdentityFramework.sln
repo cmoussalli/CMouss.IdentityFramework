@@ -15,12 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMouss.IdentityFramework.AP
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CMouss.IdentityFramework.SharedModels", "CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.shproj", "{CF49B500-B440-404C-ABDD-0C6769884253}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.Client", "CMouss.IdentityFramework.Client\CMouss.IdentityFramework.Client.csproj", "{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}"
+EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{0f82ecd5-5bb2-400c-94c3-5dd421bf512a}*SharedItemsImports = 5
-		CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{3c31ae90-f608-42bf-a973-bcff7eb06e5e}*SharedItemsImports = 5
-		CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{cf49b500-b440-404c-abdd-0c6769884253}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -46,11 +43,20 @@ Global
 		{0F82ECD5-5BB2-400C-94C3-5DD421BF512A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F82ECD5-5BB2-400C-94C3-5DD421BF512A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F82ECD5-5BB2-400C-94C3-5DD421BF512A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD2CB123-2A1E-4379-A61A-9D30259022F9}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{0f82ecd5-5bb2-400c-94c3-5dd421bf512a}*SharedItemsImports = 5
+		CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{3c31ae90-f608-42bf-a973-bcff7eb06e5e}*SharedItemsImports = 5
+		CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{cf49b500-b440-404c-abdd-0c6769884253}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
