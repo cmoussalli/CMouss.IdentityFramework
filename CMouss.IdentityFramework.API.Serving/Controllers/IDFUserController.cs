@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using CMouss.IdentityFramework.API.Models;
 using CMouss.IdentityFramework.API.Serving;
 
-namespace CMouss.IdentityFramework.API.Serving.Controllers
+namespace CMouss.IdentityFramework.API.Serving
 {
     public class IDFUserController : Controller
     {

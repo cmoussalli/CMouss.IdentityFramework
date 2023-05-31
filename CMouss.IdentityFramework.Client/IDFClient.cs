@@ -1,11 +1,7 @@
 ﻿namespace CMouss.IdentityFramework.Client
 {
 
-    public enum IDFAuthenticationMode
-    {
-        User
-        ,App
-    }
+
 
 
     public static class IDFClient

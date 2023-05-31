@@ -7,17 +7,19 @@ using System.Linq;
 using System.Threading.Tasks;
 
 
-namespace CMouss.IdentityFramework.API.Serving.Controllers
+namespace CMouss.IdentityFramework.API.Serving
 {
     public class TestController : Controller
     {
 
-        [HttpPost]
-        [Route(APIRoutes.Test.TestMain)]
-        public IActionResult Test()
-        {
-            return Ok("IdentityFramework is OK");
-        }
+        //[HttpPost]
+        //[Route(APIRoutes.Test.TestMain)]
+        //[IDFSecure(userEntityId: "Entity1", userPermissionTypeId:"UserPermissionType1",appPermissionTypeId:"AppPermissionType1")]
+        //public IActionResult Test()
+        //{
+        //    return Ok("IdentityFramework is OK");
+        //}
+
 
 
 

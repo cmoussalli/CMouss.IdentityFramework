@@ -18,6 +18,22 @@ namespace CMouss.IdentityFramework
             ).ToList();
         }
 
+        public string GetAppIdUsingAppKey(string appKey)
+        {
+            try
+            {
+                AppAccess appAccess = IDFManager.Context.AppAccess.First(o =>
+                    o.AccessKey == appKey
+                    && o.ExpireDate >= DateTime.Now
+                    );
+                return appAccess.AppId;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
         public AppAccess? Validate(string appKey, string appSecret)
         {
             List<AppAccess> lst = IDFManager.Context.AppAccess

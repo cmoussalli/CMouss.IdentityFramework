@@ -1,32 +1,53 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-
 
 namespace CMouss.IdentityFramework.API.Serving
 {
-    public class BaseController : Controller
+
+
+
+    public class RequesterInfo
     {
-        #region Security Validations
+        public IDFAuthenticationMode AuthenticationMode { get; set; }
+    }
 
-        public enum SecurityValidationResult
-        {
-            Ok = 0,
-            UnknownError = 1,
-            IncorrectParameters = 6,
+    public enum ResponseTemplate
+    {
+        Ok = 0
+        , Exception = 1
 
-            IncorrectToken = 11,
-            IncorrectAppAccess = 12,
-            UnAuthorized = 16,
+        , NotFound = 10001
+        , Duplicate = 10002
+        , IncorrectParameters = 10003
+
+        , IncorrectToken = 30010
+        , IncorrectAppAccess = 30011
+        , UnAuthenticated = 30016
+        , UnAuthorized = 30017
 
 
-        }
+    }
+    public enum SecurityValidationResult
+    {
+        Ok = 0,
+        UnknownError = 1,
+        IncorrectParameters = 6,
 
-        public SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string userRole,
+        IncorrectToken = 11,
+        IncorrectAppAccess = 12,
+        UnAuthorized = 16,
+    }
+
+
+
+    public static class Helpers
+    {
+
+
+        public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string userRole,
             string appAccessKey, string appAccessSecret, string appPermissionTypeId)
         {
             SecurityValidationResult result = SecurityValidationResult.UnknownError;
@@ -59,17 +80,17 @@ namespace CMouss.IdentityFramework.API.Serving
             catch (Exception ex)
             {
 
-                switch (ex.Message)
-                {
-                    case "IncorrectToken":
-                        result = SecurityValidationResult.IncorrectToken;
-                        return result;
-                        break;
+                //switch (ex.Message)
+                //{
+                //    case "IncorrectToken":
+                result = SecurityValidationResult.IncorrectToken;
+                return result;
+                //    break;
 
-                    default:
-                        throw new Exception(ex.Message);
-                        break;
-                }
+                //default:
+                //    throw new Exception(ex.Message);
+                //    break;
+                //}
 
 
             }
@@ -84,7 +105,7 @@ namespace CMouss.IdentityFramework.API.Serving
             return result;
         }
 
-        public SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string entityId, string permissionTypeId,
+        public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string entityId, string permissionTypeId,
             string appAccessKey, string appAccessSecret, string appPermissionTypeId)
         {
             SecurityValidationResult result = SecurityValidationResult.UnknownError;
@@ -132,94 +153,55 @@ namespace CMouss.IdentityFramework.API.Serving
             return result;
         }
 
-        #endregion
+
 
 
         #region Generic Responses
-        public enum ResponseTemplate
-        {
-            Ok = 0
-                , Exception = 1
 
-                , NotFound = 10001
-                , Duplicate = 10002
-                , IncorrectParameters = 10003
 
-                , IncorrectToken = 30010
-                , IncorrectAppAccess = 30011
-                , UnAuthenticated = 30016
-                , UnAuthorized = 30017
-        }
 
-        //public GenericResponseModel GetGenericResponse(ResponseTemplate template)
+        //public GenericResponseModel GetGenericResponse(ResponseTemplate template, string message, string error)
         //{
         //    GenericResponseModel res = new();
         //    switch (template)
         //    {
-        //        case ResponseTemplate.Ok: res.ResponseStatus.SetAsSuccess(); break;
+        //        case ResponseTemplate.Ok: res.ResponseStatus.SetAsSuccess(message); break;
         //        //case ResponseTemplate.UnAuthorized: res.ResponseStatus.SetAsUnAuthorized(); break;
         //        //case ResponseTemplate.UnAuthenticated: res.ResponseStatus.(); break;
 
         //        default:
         //            res.ResponseStatus.IsSuccess = false;
-        //            ErrorType er = BADNServices.ErrorTypeList.First(o => o.Id == template.GetHashCode());
-        //            if (er == null)
-        //            {
-        //                res.ResponseStatus.Errors.Add(new ErrorModel { Code = template.GetHashCode().ToString(), Message = template.ToString() });
-        //            }
-        //            else
-        //            {
-        //                res.ResponseStatus.Errors.Add(new ErrorModel { Code = template.GetHashCode().ToString(), Message = er.TitleEn });
-        //            }
+        //            res.ResponseStatus.Message = message;
+        //            res.ResponseStatus.Errors.Add(new ErrorModel { Code = template.GetHashCode().ToString(), Message = error });
         //            break;
         //    }
         //    return res;
         //}
-        public GenericResponseModel GetGenericResponse(ResponseTemplate template, string message, string error)
-        {
-            GenericResponseModel res = new();
-            switch (template)
-            {
-                case ResponseTemplate.Ok: res.ResponseStatus.SetAsSuccess(message); break;
-                //case ResponseTemplate.UnAuthorized: res.ResponseStatus.SetAsUnAuthorized(); break;
-                //case ResponseTemplate.UnAuthenticated: res.ResponseStatus.(); break;
+        //public GenericResponseModel GetGenericResponse_Ok(string message)
+        //{
+        //    GenericResponseModel res = new();
+        //    res.ResponseStatus.IsSuccess = true;
+        //    res.ResponseStatus.Message = message;
+        //    return res;
+        //}
+        //public GenericResponseModel GetGenericResponse_Error(string error)
+        //{
+        //    GenericResponseModel res = new();
+        //    res.ResponseStatus.IsSuccess = false;
+        //    res.ResponseStatus.Message = "";
+        //    res.ResponseStatus.Errors.Add(new ErrorModel { Code = "", Message = error }); ;
+        //    return res;
+        //}
 
-                default:
-                    res.ResponseStatus.IsSuccess = false;
-                    res.ResponseStatus.Message = message;
-                    res.ResponseStatus.Errors.Add(new ErrorModel { Code = template.GetHashCode().ToString(), Message = error });
-                    break;
-            }
-            return res;
-        }
-        public GenericResponseModel GetGenericResponse_Ok(string message)
-        {
-            GenericResponseModel res = new();
-            res.ResponseStatus.IsSuccess = true;
-            res.ResponseStatus.Message = message;
-            return res;
-        }
-        public GenericResponseModel GetGenericResponse_Error(string error)
-        {
-            GenericResponseModel res = new();
-            res.ResponseStatus.IsSuccess = false;
-            res.ResponseStatus.Message = "";
-            res.ResponseStatus.Errors.Add(new ErrorModel { Code = "", Message = error }); ;
-            return res;
-        }
-
-        public GenericResponseModel GetGenericResponse_Error(int errorTypeId)
-        {
-            GenericResponseModel res = new();
-            res.ResponseStatus.IsSuccess = false;
-            res.ResponseStatus.Message = "";
-            res.ResponseStatus.Errors.Add(new ErrorModel { Code = errorTypeId.ToString() });
-            return res;
-        }
-
-
+        //public GenericResponseModel GetGenericResponse_Error(int errorTypeId)
+        //{
+        //    GenericResponseModel res = new();
+        //    res.ResponseStatus.IsSuccess = false;
+        //    res.ResponseStatus.Message = "";
+        //    res.ResponseStatus.Errors.Add(new ErrorModel { Code = errorTypeId.ToString() });
+        //    return res;
+        //}
 
         #endregion
-
     }
 }

@@ -10,6 +10,22 @@ namespace CMouss.IdentityFramework
     public class UserTokenService
     {
 
+        public string GetUserIdUsingUsertoken(string token)
+        {
+            try
+            {
+                UserToken tok = IDFManager.Context.UserTokens.First(o =>
+                    o.Token == token
+                    && o.ExpireDate >= DateTime.Now
+                    );
+                return tok.UserId;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
         public UserToken? Validate(string token)
         {
 

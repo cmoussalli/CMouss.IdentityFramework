@@ -45,15 +45,12 @@ namespace CMouss.IdentityFramework
     {
         public ResponseStatusModel ResponseStatus { get; set; } = new ResponseStatusModel();
         public bool Result { get; set; }
-
     }
 
 
     public class GenericResponseModel
     {
         public ResponseStatusModel ResponseStatus { get; set; } = new ResponseStatusModel();
-
-
     }
 
     public class ResponseStatusModel
