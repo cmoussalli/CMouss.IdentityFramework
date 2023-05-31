@@ -24,7 +24,7 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
           , [FromHeader] string fullname
           , [FromHeader] string email)
         {
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
 
@@ -33,12 +33,13 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
                     newid = Guid.NewGuid().ToString();
                 }
                 IDFManager.UserServices.Register(username, password, fullname, email);
-                result = new GenericResponseModel(true);
+                result.ResponseStatus.SetAsSuccess();
+
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
             }
             return StatusCode(400, result);
         }
@@ -52,20 +53,24 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             , [FromHeader] string password
         )
         {
-            API.Models.UserToken result = new();
+            IDFUserResponseModels.Login result = new();
             try
             {
                 UserToken dbUserToken = IDFManager.UserServices.UserLogin(username, password);
                 if (!String.IsNullOrEmpty(dbUserToken.Token))
                 {
-                    return Ok(Converters.UserTokenConverter.ToAPIUserToken(dbUserToken));
+                    result.ResponseStatus.SetAsSuccess();
+                    result.UserToken = Converters.UserTokenConverter.ToAPIUserToken(dbUserToken);
+                    return Ok(result);
                 }
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
             }
-            return NotFound();
+            result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = "Incorrect token" });
+            return StatusCode(400, result);
         }
         #endregion
 
@@ -76,20 +81,24 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
              [FromHeader] string token
         )
         {
-            API.Models.UserToken result = new();
+            IDFUserResponseModels.Login result = new();
             try
             {
                 UserToken dbUserToken = IDFManager.UserTokenServices.Validate(token);
-                if (dbUserToken is not null)
+                if (!String.IsNullOrEmpty(dbUserToken.Token))
                 {
-                    return Ok(Converters.UserTokenConverter.ToAPIUserToken(dbUserToken));
+                    result.ResponseStatus.SetAsSuccess();
+                    result.UserToken = Converters.UserTokenConverter.ToAPIUserToken(dbUserToken);
+                    return Ok(result);
                 }
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
             }
-            return NotFound();
+            result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = "Incorrect token" });
+            return StatusCode(400, result);
         }
         #endregion
 
@@ -117,7 +126,7 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             #endregion
 
 
-            List<API.Models.User> result = new();
+            IDFUserResponseModels.Search result = new();
             try
             {
                 if (model == null)
@@ -127,11 +136,13 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
                 };
                 List<CMouss.IdentityFramework.User> dbUsers = IDFManager.UserServices.Search(Converters.PagingConverter.ToDBPaging(model.Paging), Converters.UsersSearchConverter.ToDBUsersSearch(model.UsersSearch));
-                result = Converters.UserConverter.ToAPIUsersList(dbUsers);
+                result.ResponseStatus.SetAsSuccess();
+                result.Users = Converters.UserConverter.ToAPIUsersList(dbUsers);
             }
             catch (Exception ex)
             {
-                return NotFound(ex.Message);
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
             }
             return Ok(result);
         }
@@ -160,14 +171,16 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            API.Models.User result = new();
+            IDFUserResponseModels.Details result = new();
             try
             {
-                result = Converters.UserConverter.ToAPIUser(IDFManager.UserServices.Details(model.UserId), true, true, null);
+                result.ResponseStatus.SetAsSuccess();
+                result.User = Converters.UserConverter.ToAPIUser(IDFManager.UserServices.Details(model.UserId), true, true, null);
             }
             catch (Exception ex)
             {
-                return NotFound(ex.Message);
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
             }
             return Ok(result);
         }
@@ -194,18 +207,17 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
 
                 string res = IDFManager.UserServices.Create(model.UserName, model.Password, model.FullName, model.Email, model.IsLocked, model.IsActive);
-                result = new GenericResponseModel(true);
-                result.ReferenceId = res;
+                result.ResponseStatus.SetAsSuccess("",res);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
             }
             return StatusCode(400, result);
         }
@@ -234,16 +246,16 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            GenericResponseModel result = new(false);
-            result.ReferenceId = model.UserId;
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.Update(model.UserId, model.FullName, model.Email, model.IsLocked, model.IsActive);
-                return Ok(new GenericResponseModel(true));
+                result.ResponseStatus.SetAsSuccess("", model.UserId);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -273,16 +285,17 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            GenericResponseModel result = new(false);
-            result.ReferenceId = model.UserId;
+            GenericResponseModel result = new();
+
             try
             {
                 IDFManager.UserServices.Delete(model.UserId);
-                return Ok(new GenericResponseModel(true));
+                result.ResponseStatus.SetAsSuccess("", model.UserId);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -319,18 +332,19 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.ChangePassword(model.UserId, model.NewPassword, model.ChangePrivateKey);
+                result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
-            return Ok();
+            return Ok(result);
         }
         #endregion
 
@@ -358,14 +372,15 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.ChangePassword(model.UserId, model.NewPassword, model.ChangePrivateKey);
+                result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -397,14 +412,15 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.Lock(model.UserId);
+                result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -435,14 +451,15 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
             }
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.UnLock(model.UserId);
+                result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -473,20 +490,19 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            IDFUserResponseModels.GetRoles result = new();
             try
             {
                 List<API.Models.Role> apiRoles = Converters.RoleConverter.ToAPIRolesList(IDFManager.UserServices.GetRoles(model.UserId), false, false);
-
-                return Ok(apiRoles);
+                result.ResponseStatus.SetAsSuccess();
+                result.Roles = apiRoles;
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
-
-            return Ok();
+            return Ok(result);
         }
         #endregion
 
@@ -512,18 +528,19 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.GrantRole(model.UserId, model.RoleId);
+                result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
-            return Ok();
+            return Ok(result);
         }
         #endregion
 
@@ -549,18 +566,19 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            GenericResponseModel result = new();
             try
             {
                 IDFManager.UserServices.RevokeRole(model.UserId, model.RoleId);
+                result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
-            return Ok();
+            return Ok(result);
         }
         #endregion
 
@@ -587,16 +605,17 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            BooleanResponseModel result = new();
             try
             {
                 
                 bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleId);
-                result = new(true,res.ToString().ToLower());
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -626,16 +645,17 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            BooleanResponseModel result = new();
             try
             {
 
                 bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleIds);
-                result = new(true, res.ToString().ToLower());
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -666,16 +686,17 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            BooleanResponseModel result = new();
             try
             {
 
                 bool res = IDFManager.UserServices.ValidateTokenRole(model.Token, model.RoleId);
-                result = new(true, res.ToString().ToLower());
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
@@ -705,16 +726,17 @@ namespace CMouss.IdentityFramework.API.Serving.Controllers
 
             #endregion
 
-            GenericResponseModel result = new(false);
+            BooleanResponseModel result = new();
             try
             {
 
                 bool res = IDFManager.UserServices.ValidateTokenRole(model.Token, model.RoleIds);
-                result = new(true, res.ToString().ToLower());
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
             }
             catch (Exception ex)
             {
-                result.Message = ex.Message;
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
 
