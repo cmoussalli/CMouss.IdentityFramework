@@ -2,8 +2,6 @@
 {
 
 
-
-
     public static class IDFClient
     {
         public static void Init_UseUserAndPassword(string siteUrl, string userName, string password)

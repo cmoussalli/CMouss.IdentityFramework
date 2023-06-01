@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,45 +9,96 @@ using System.Threading.Tasks;
 namespace CMouss.IdentityFramework.API.Serving
 {
 
+    ///// <summary>
+    ///// Set The authorization rules
+    ///// </summary>
+    //public class ActionPermission
+    //{
+    //    /// <summary>
+    //    /// Specify the required granted entity access to user  
+    //    /// </summary>
+    //    public string EntityId { get; set; }
+
+    //    /// <summary>
+    //    /// Specify the required granted entity permission type access to user  
+    //    /// </summary>
+    //    public string PermissionTypeId { get; set; }
+
+    //    /// <summary>
+    //    /// Specify the required app permission type, used only if AppPermissionMode: SimpleMode & TenantMode
+    //    /// </summary>
+    //    public string AppPermissionTypeId { get; set; }
+
+    //    /// <summary>
+    //    /// Specify how you want app authorization behave.
+    //    /// NotAllowed: Ignore app permissions.
+    //    /// SimpleMode: Validate app permission type only, IGNORE user entity and permission type rules.
+    //    /// Tenant Mode: Validate BOTH app permission type and user entity and permission type rules.
+    //    /// </summary>
+    //    public AppPermissionMode AppPermissionMode { get; set; } = AppPermissionMode.NotAllowed;
+
+    //    public ActionPermission()
+    //    {
+    //        EntityId = "";
+    //        PermissionTypeId = "";
+    //        AppPermissionTypeId = "";
+    //    }
+
+    //}
 
 
-    public class RequesterInfo
-    {
-        public IDFAuthenticationMode AuthenticationMode { get; set; }
-    }
+    //public static class ActionPermissionFactory
+    //{
+    //    public static ActionPermission Create()
+    //    {
+    //        return new ActionPermission();
+    //    }
+    //}
 
-    public enum ResponseTemplate
-    {
-        Ok = 0
-        , Exception = 1
+    //public class RequesterInfo
+    //{
+    //    public IDFAuthenticationMode AuthenticationMode { get; set; }
+    //}
 
-        , NotFound = 10001
-        , Duplicate = 10002
-        , IncorrectParameters = 10003
+    //public enum ResponseTemplate
+    //{
+    //    Ok = 0
+    //    , Exception = 1
 
-        , IncorrectToken = 30010
-        , IncorrectAppAccess = 30011
-        , UnAuthenticated = 30016
-        , UnAuthorized = 30017
+    //    , NotFound = 10001
+    //    , Duplicate = 10002
+    //    , IncorrectParameters = 10003
+
+    //    , IncorrectToken = 30010
+    //    , IncorrectAppAccess = 30011
+    //    , UnAuthenticated = 30016
+    //    , UnAuthorized = 30017
 
 
-    }
-    public enum SecurityValidationResult
-    {
-        Ok = 0,
-        UnknownError = 1,
-        IncorrectParameters = 6,
+    //}
 
-        IncorrectToken = 11,
-        IncorrectAppAccess = 12,
-        UnAuthorized = 16,
-    }
+
+
 
 
 
     public static class Helpers
     {
 
+        public static void ReturnSecurityFail(ActionExecutingContext context, string content)
+        {
+            context.Result = new ContentResult
+            {
+                Content = content
+                   ,
+                StatusCode = 403
+                   ,
+                ContentType = "text/plain"
+            };
+            //context.Result = new StatusCodeResult(403); // Return a Forbidden HTTP status code
+
+            return;
+        }
 
         public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string userRole,
             string appAccessKey, string appAccessSecret, string appPermissionTypeId)
