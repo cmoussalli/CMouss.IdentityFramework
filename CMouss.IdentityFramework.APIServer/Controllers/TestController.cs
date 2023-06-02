@@ -21,13 +21,44 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
         //    return Ok(requesterinfo);
         //}
 
+        //[HttpPost]
+        //[Route(APIRoutes.Test.TestMain)]
+        //[IDFAllowUserAndApp("Entity1","UserPermissionType1",AppPermissionMode.SimpleMode, "AppPermissionType1")]
+        //public IActionResult Test()
+        //{
+        //    return Ok("IdentityFramework is OK");
+        //}
+
         [HttpPost]
-        [Route(APIRoutes.Test.TestMain)]
-        [IDFAllowUserAndApp("Entity1","UserPermissionType1",AppPermissionMode.SimpleMode, "AppPermissionType1")]
-        public IActionResult Test()
+        [Route("api/test/usertoken")]
+        [IDFAuthUser()]
+        public async Task<IActionResult> TestAuthUserToken(
+            [FromHeader] string userToken
+            , string requesterAuthInfo)
         {
-            return Ok("IdentityFramework is OK");
+            return Ok(requesterAuthInfo);
         }
+
+        [HttpPost]
+        [Route("api/test/UserWithRole")]
+        [IDFAuthUserWithRole("Administrators")]
+        public async Task<IActionResult> TestAuthUserWithRole(
+            [FromHeader] string userToken
+            , string requesterAuthInfo)
+        {
+            return Ok(requesterAuthInfo);
+        }
+
+        [HttpPost]
+        [Route("api/test/UserWithPermission")]
+        [IDFAuthUserWithPermission("Entity1","PermissionType1")]
+        public async Task<IActionResult> TestAuthUserWithPermission(
+            [FromHeader] string userToken
+            , string requesterAuthInfo)
+        {
+            return Ok(requesterAuthInfo);
+        }
+
 
 
     }

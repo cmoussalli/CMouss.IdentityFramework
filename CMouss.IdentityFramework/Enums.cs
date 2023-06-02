@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CMouss.IdentityFramework.API.Serving
+namespace CMouss.IdentityFramework
 {
     /// <summary>
     /// Use Tenant mode only if you want to validate the authenticated app's both User permission and App Permission
@@ -29,5 +29,9 @@ namespace CMouss.IdentityFramework.API.Serving
     }
 
 
-
+    public enum IDFAuthenticationMode
+    {
+        User
+    , App
+    }
 }

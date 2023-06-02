@@ -52,7 +52,8 @@ namespace CMouss.IdentityFramework
             //Add Default Records
             string adminRoleID = Helpers.GenerateId();
             //string adminUserID = Helpers.GenerateId();
-
+            if(!string.IsNullOrEmpty( IDFManager.AdministratorRoleId) )
+                { adminRoleID = IDFManager.AdministratorRoleId; }
             //Create Administrator Role
             IDFDBContext db = new IDFDBContext();
             List<Role> roles = db.Roles.Where(o => o.Title.ToLower() == IDFManager.AdministratorRoleName.ToLower()).ToList();
@@ -65,7 +66,7 @@ namespace CMouss.IdentityFramework
             List<User> users = db.Users.Where(o => o.UserName.ToLower() == IDFManager.AdministratorUserName.ToLower()).ToList();
             if (users.Count == 0)
             {
-                string adminUserID = IDFManager.UserServices.Create(IDFManager.AdministratorUserName, "P@ssw0rd", IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com",false,true);
+                string adminUserID = IDFManager.UserServices.Create(IDFManager.AdministratorUserName, IDFManager.AdministratorPassword, IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com",false,true);
                 IDFManager.UserServices.GrantRole(adminUserID, adminRoleID);
 
             }

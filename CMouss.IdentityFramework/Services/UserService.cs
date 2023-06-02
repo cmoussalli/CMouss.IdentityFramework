@@ -451,57 +451,11 @@ namespace CMouss.IdentityFramework
 
 
 
-        #region Validate Token Role
-        public bool ValidateTokenRole(string token, string roleId)
-        {
-            bool result = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
-            if (userToken == null)
-            {
-                throw new InvalidTokenException();
-            }
-            result = IDFManager.Context.Roles.Include(r => r.Users).Any(o => o.Id == roleId && o.Users.Any(u => u.Id == userToken.UserId));
-            if (result) { return result; }
 
-            return result;
-        }
-        public bool ValidateTokenRole(string token, List<string> roleIds)
-        {
-            bool result = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
-            if (userToken == null)
-            {
-                throw new InvalidTokenException();
-            }
-            result = IDFManager.Context.Roles.Include(r => r.Users).Any(o => roleIds.Contains(o.Id) && o.Users.Any(u => u.Id == userToken.UserId));
-            if (result) { return result; }
 
-            return result;
-        }
-        #endregion
 
-        #region Validate Token Permission
-        public bool ValidateTokenPermission(string token, string entityId, string permissionTypeId)
-        {
-            bool result = false;
-            List<UserToken> ts = IDFManager.Context.UserTokens
-                .Include(t => t.User).ThenInclude(u => u.Roles).ThenInclude(r => r.Permissions)
-                .Where(o => o.Token.ToLower() == token.ToLower()).ToList();
-            if (ts.Count < 1) { throw new InvalidTokenException(); }
-            result = ts[0].User.Roles.Any(r => r.Permissions.Any(p => p.EntityId.ToLower() == entityId.ToLower() && p.PermissionTypeId.ToLower().Contains(permissionTypeId.ToLower())));
-            return result;
-        }
-        public bool ValidateTokenPermission(string token, string entityId, List<string> permissionTypeIds)
-        {
-            bool result = false;
-            List<UserToken> ts = IDFManager.Context.UserTokens.Where(o => o.Token.ToLower() == token.ToLower()).ToList();
-            if (ts.Count < 1) { throw new InvalidTokenException(); }
-            result = ts[0].User.Roles.Any(r => r.Permissions.Any(p => p.EntityId.ToLower() == entityId.ToLower() && permissionTypeIds.Contains(p.PermissionTypeId)));
-            return result;
-        }
-        #endregion
 
-        #region Validate Token Role or Permission
+        #region Validate UserToken Role or Permission
         public bool ValidateTokenRoleOrPermission(string token, string rolesId, string entity, string permissionTypeId)
         {
             bool result = false;
@@ -510,7 +464,7 @@ namespace CMouss.IdentityFramework
             {
                 throw new InvalidTokenException();
             }
-            if (ValidateTokenRole(userToken.UserId, rolesId))
+            if (ValidateUserRole(userToken.UserId, rolesId))
             {
                 return true;
             }

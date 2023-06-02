@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CMouss.IdentityFramework.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -247,6 +248,7 @@ namespace CMouss.IdentityFramework
         public static UserService UserServices = new UserService();
         public static UserTokenService UserTokenServices = new UserTokenService();
         public static AppAccessService AppAccessServices = new AppAccessService();
+        public static AuthService AuthService = new AuthService();
 
 
 

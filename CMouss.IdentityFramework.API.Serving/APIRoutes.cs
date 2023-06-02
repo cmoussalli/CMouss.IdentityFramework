@@ -18,10 +18,27 @@ namespace CMouss.IdentityFramework.API.Serving
         public static class Test
         {
             public const string TestMain = Base + "/Test";
+            const String entity = "Test";
 
+            public const string Echo = Base + "/" + entity + "/Echo";
         }
         #endregion
 
+
+        #region Auth
+        public static class Auth
+        {
+            const String entity = "Auth";
+            
+            public const string UserLogin = Base + "/" + entity + "/UserLogin";
+
+
+
+            public const string AppLogin = Base + "/" + entity + "/AppLogin";
+
+
+        }
+        #endregion
 
 
         #region User

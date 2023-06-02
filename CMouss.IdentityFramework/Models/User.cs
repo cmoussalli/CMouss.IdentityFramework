@@ -17,10 +17,12 @@ namespace CMouss.IdentityFramework
 
         [Required]
         [StringLength(128)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string Password { get; set; }
 
         [Required]
         [StringLength(450)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string PrivateKey { get; set; }
 
         public string FullName { get; set; }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CMouss.IdentityFramework
+namespace CMouss.IdentityFramework.API.Models
 {
     //public class GenericResponseModel
     //{

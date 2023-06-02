@@ -77,6 +77,10 @@ namespace CMouss.IdentityFramework.APIServer
 
                 DatabaseType = DatabaseType.SQLite,
                 DBConnectionString = "Data Source=mydb.db;",
+                AdministratorUserName = "Admin",
+                AdministratorPassword = "P@ssw0rd",
+                AdministratorRoleId = "Administrators",
+                AdministratorRoleName = "Administrators",
                 DefaultListPageSize = 25,
                 DBLifeCycle = DBLifeCycle.Both,
                 IsActiveByDefault = true,
@@ -86,6 +90,7 @@ namespace CMouss.IdentityFramework.APIServer
 
             IDFDBContext db = new IDFDBContext();
             db.Database.EnsureCreated();
+            db.InsertMasterData();
 
         }
 

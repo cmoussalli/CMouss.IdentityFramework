@@ -5,36 +5,19 @@
 //using System.Linq;
 //using System.Text;
 //using System.Threading.Tasks;
-//using CMouss.IdentityFramework.API.Models;
 
 //namespace CMouss.IdentityFramework.API.Serving
 //{
 
-
-
-
-
-
-//    public class IDFAllowUserAndAppAttribute : ActionFilterAttribute
+//    public class IDFSecureAttribute : ActionFilterAttribute
 //    {
+//        //private readonly string _userRoleId;
 //        private readonly string _userEntityId;
 //        private readonly string _userPermissionTypeId;
-
-        
-//        private readonly AppPermissionMode _appPermissionMode;
 //        private readonly string _appPermissionTypeId;
 
-
-
-
-//        //private readonly ActionPermission _actionPermission;
-
-//        public IDFAllowUserAndAppAttribute(/*string userRoleId,*/ string userEntityId, string userPermissionTypeId, AppPermissionMode appPermissionMode,string appPermissionTypeId) =>
-//            (_userEntityId, _userPermissionTypeId, _appPermissionMode, _appPermissionTypeId) = 
-//            (userEntityId, userPermissionTypeId, appPermissionMode,appPermissionTypeId);
-
-//        //public IDFAllowUserAttribute(ActionPermission actionPermission) =>
-//        //    (_actionPermission) = (actionPermission);
+//        public IDFSecureAttribute(/*string userRoleId,*/ string userEntityId, string userPermissionTypeId, string appPermissionTypeId) =>
+//           (/*_userRoleId,*/ _userEntityId, _userPermissionTypeId, _appPermissionTypeId) = (/*userRoleId,*/ userEntityId, userPermissionTypeId, appPermissionTypeId);
 
 //        public override void OnActionExecuting(ActionExecutingContext context)
 //        {
@@ -58,7 +41,7 @@
 //                }
 //                if (!string.IsNullOrEmpty(appKey) && !string.IsNullOrEmpty(appKey))
 //                {
-//                    context.ActionArguments["requesterInfo"] = "AppId:" + IDFManager.UserTokenServices.Validate(userToken).UserId;
+//                    context.ActionArguments["requesterInfo"] = "AppId:" + IDFManager.AppAccessServices.GetAppIdUsingAppKey(appKey);
 //                }
 //                ReturnSecurityFail(context, security.ToString());
 //                return;

@@ -100,111 +100,111 @@ namespace CMouss.IdentityFramework.API.Serving
             return;
         }
 
-        public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string userRole,
-            string appAccessKey, string appAccessSecret, string appPermissionTypeId)
-        {
-            SecurityValidationResult result = SecurityValidationResult.UnknownError;
-            bool isAuthorized = false;
-            if (
-                (
-                !String.IsNullOrEmpty(userToken) && !String.IsNullOrEmpty(userRole)
-                && String.IsNullOrEmpty(appAccessKey) && String.IsNullOrEmpty(appAccessSecret) && String.IsNullOrEmpty(appPermissionTypeId)
-                ) || (
-                String.IsNullOrEmpty(userToken) && String.IsNullOrEmpty(userRole)
-                && !String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && !String.IsNullOrEmpty(appPermissionTypeId)
-                )
-            ) { }
-            else { }
+        //public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string userRole,
+        //    string appAccessKey, string appAccessSecret, string appPermissionTypeId)
+        //{
+        //    SecurityValidationResult result = SecurityValidationResult.UnknownError;
+        //    bool isAuthorized = false;
+        //    if (
+        //        (
+        //        !String.IsNullOrEmpty(userToken) && !String.IsNullOrEmpty(userRole)
+        //        && String.IsNullOrEmpty(appAccessKey) && String.IsNullOrEmpty(appAccessSecret) && String.IsNullOrEmpty(appPermissionTypeId)
+        //        ) || (
+        //        String.IsNullOrEmpty(userToken) && String.IsNullOrEmpty(userRole)
+        //        && !String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && !String.IsNullOrEmpty(appPermissionTypeId)
+        //        )
+        //    ) { }
+        //    else { }
 
-            try
-            {
-                if (!String.IsNullOrEmpty(userToken))
-                { isAuthorized = IDFManager.UserServices.ValidateTokenRole(userToken, userRole); }
+        //    try
+        //    {
+        //        if (!String.IsNullOrEmpty(userToken))
+        //        { isAuthorized = IDFManager.UserServices.ValidateTokenRole(userToken, userRole); }
 
-                if (!String.IsNullOrEmpty(appAccessKey) && isAuthorized == false)
-                { isAuthorized = IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessKey, appAccessSecret, appPermissionTypeId); }
+        //        if (!String.IsNullOrEmpty(appAccessKey) && isAuthorized == false)
+        //        { isAuthorized = IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessKey, appAccessSecret, appPermissionTypeId); }
 
-            }
-            catch (InvalidAppAccessKeyOrSecretException)
-            {
-                result = SecurityValidationResult.IncorrectAppAccess;
-                return result;
-            }
-            catch (Exception ex)
-            {
+        //    }
+        //    catch (InvalidAppAccessKeyOrSecretException)
+        //    {
+        //        result = SecurityValidationResult.IncorrectAppAccess;
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
 
-                //switch (ex.Message)
-                //{
-                //    case "IncorrectToken":
-                result = SecurityValidationResult.IncorrectToken;
-                return result;
-                //    break;
+        //        //switch (ex.Message)
+        //        //{
+        //        //    case "IncorrectToken":
+        //        result = SecurityValidationResult.IncorrectToken;
+        //        return result;
+        //        //    break;
 
-                //default:
-                //    throw new Exception(ex.Message);
-                //    break;
-                //}
-
-
-            }
-            if (isAuthorized)
-            {
-                result = SecurityValidationResult.Ok;
-            }
-            else
-            {
-                result = SecurityValidationResult.UnAuthorized;
-            }
-            return result;
-        }
-
-        public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string entityId, string permissionTypeId,
-            string appAccessKey, string appAccessSecret, string appPermissionTypeId)
-        {
-            SecurityValidationResult result = SecurityValidationResult.UnknownError;
-            bool isAuthorized = false;
-            if (
-                (
-                !String.IsNullOrEmpty(userToken) && !String.IsNullOrEmpty(entityId) && !String.IsNullOrEmpty(permissionTypeId)
-                && String.IsNullOrEmpty(appAccessKey) && String.IsNullOrEmpty(appAccessSecret) && String.IsNullOrEmpty(appPermissionTypeId)
-                ) || (
-                String.IsNullOrEmpty(userToken) && String.IsNullOrEmpty(entityId) && String.IsNullOrEmpty(permissionTypeId)
-                && !String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && !String.IsNullOrEmpty(appPermissionTypeId)
-                )
-            ) { }
-            else { }
-
-            try
-            {
-                if (!String.IsNullOrEmpty(userToken))
-                { isAuthorized = IDFManager.UserServices.ValidateTokenPermission(userToken, entityId, permissionTypeId); }
-
-                if (!String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && isAuthorized == false)
-                { isAuthorized = IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessKey, appAccessSecret, appPermissionTypeId); }
-
-            }
-            catch (InvalidAppAccessKeyOrSecretException)
-            {
-                result = SecurityValidationResult.IncorrectAppAccess;
-                return result;
-            }
-            catch (InvalidTokenException)
-            {
-                result = SecurityValidationResult.IncorrectToken;
-                return result;
-            }
+        //        //default:
+        //        //    throw new Exception(ex.Message);
+        //        //    break;
+        //        //}
 
 
-            if (isAuthorized)
-            {
-                result = SecurityValidationResult.Ok;
-            }
-            else
-            {
-                result = SecurityValidationResult.UnAuthorized;
-            }
-            return result;
-        }
+        //    }
+        //    if (isAuthorized)
+        //    {
+        //        result = SecurityValidationResult.Ok;
+        //    }
+        //    else
+        //    {
+        //        result = SecurityValidationResult.UnAuthorized;
+        //    }
+        //    return result;
+        //}
+
+        //public static SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string entityId, string permissionTypeId,
+        //    string appAccessKey, string appAccessSecret, string appPermissionTypeId)
+        //{
+        //    SecurityValidationResult result = SecurityValidationResult.UnknownError;
+        //    bool isAuthorized = false;
+        //    if (
+        //        (
+        //        !String.IsNullOrEmpty(userToken) && !String.IsNullOrEmpty(entityId) && !String.IsNullOrEmpty(permissionTypeId)
+        //        && String.IsNullOrEmpty(appAccessKey) && String.IsNullOrEmpty(appAccessSecret) && String.IsNullOrEmpty(appPermissionTypeId)
+        //        ) || (
+        //        String.IsNullOrEmpty(userToken) && String.IsNullOrEmpty(entityId) && String.IsNullOrEmpty(permissionTypeId)
+        //        && !String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && !String.IsNullOrEmpty(appPermissionTypeId)
+        //        )
+        //    ) { }
+        //    else { }
+
+        //    try
+        //    {
+        //        if (!String.IsNullOrEmpty(userToken))
+        //        { isAuthorized = IDFManager.UserServices.ValidateTokenPermission(userToken, entityId, permissionTypeId); }
+
+        //        if (!String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && isAuthorized == false)
+        //        { isAuthorized = IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessKey, appAccessSecret, appPermissionTypeId); }
+
+        //    }
+        //    catch (InvalidAppAccessKeyOrSecretException)
+        //    {
+        //        result = SecurityValidationResult.IncorrectAppAccess;
+        //        return result;
+        //    }
+        //    catch (InvalidTokenException)
+        //    {
+        //        result = SecurityValidationResult.IncorrectToken;
+        //        return result;
+        //    }
+
+
+        //    if (isAuthorized)
+        //    {
+        //        result = SecurityValidationResult.Ok;
+        //    }
+        //    else
+        //    {
+        //        result = SecurityValidationResult.UnAuthorized;
+        //    }
+        //    return result;
+        //}
 
 
 
