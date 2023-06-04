@@ -47,13 +47,13 @@ namespace CMouss.IdentityFramework.API.Serving
         [HttpPost]
         [Route(APIRoutes.User.ValidateToken)]
         public IActionResult ValidateToken(
-             [FromHeader] string token
+             [FromHeader] string userToken
         )
         {
             IDFUserResponseModels.Login result = new();
             try
             {
-                UserToken dbUserToken = IDFManager.UserTokenServices.Validate(token);
+                UserToken dbUserToken = IDFManager.UserTokenServices.Validate(userToken);
                 if (!String.IsNullOrEmpty(dbUserToken.Token))
                 {
                     result.ResponseStatus.SetAsSuccess();
@@ -78,17 +78,17 @@ namespace CMouss.IdentityFramework.API.Serving
         [Route(APIRoutes.User.ValidateUserRole)]
         public IActionResult ValidateUserRole(
             [FromBody] Models.IDFUserRequestModels.ValidateUserRole model
-           , [FromHeader] string token
+           , [FromHeader] string userToken
        )
         {
             #region Validate Token
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
+            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
             if (userToken == null)
             {
                 return Unauthorized(Messages.IncorrectToken);
             }
 
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(userToken.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserRole"))
+            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserRole"))
             {
                 return Unauthorized();
             }
