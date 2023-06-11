@@ -227,30 +227,7 @@ namespace CMouss.IdentityFramework
 
         }
 
-        public UserToken UserLogin(string user, string password)
-        {
-            List<Role> roles = IDFManager.Context.Roles.ToList();
 
-            UserToken t = new UserToken();
-            List<User> o = IDFManager.Context.Users.Include(o => o.Apps).Where(o => o.UserName.ToLower() == user.ToLower() && o.IsDeleted == false).ToList();
-            if (o == null)
-            {
-                throw new NotFoundException();
-            }
-            if (o.Count == 0)
-            {
-                throw new NotFoundException();
-            }
-
-            if (password != Helpers.Decrypt(o[0].Password, o[0].PrivateKey))
-            {
-                throw new IncorrectPasswordException();
-            }
-
-
-            t = IDFManager.UserTokenServices.Create(o[0].Id);
-            return t;
-        }
 
 
         #region Get Roles

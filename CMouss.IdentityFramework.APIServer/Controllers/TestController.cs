@@ -1,5 +1,9 @@
 ﻿using CMouss.IdentityFramework.API.Serving;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System;
+using System.Reflection.Metadata.Ecma335;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework.APIServer.Controllers
@@ -36,7 +40,9 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
             [FromHeader] string userToken
             , string requesterAuthInfo)
         {
-            return Ok(requesterAuthInfo);
+            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
+                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
         }
 
         [HttpPost]
@@ -46,7 +52,9 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
             [FromHeader] string userToken
             , string requesterAuthInfo)
         {
-            return Ok(requesterAuthInfo);
+            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine 
+                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
         }
 
         [HttpPost]
@@ -56,10 +64,27 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
             [FromHeader] string userToken
             , string requesterAuthInfo)
         {
-            return Ok(requesterAuthInfo);
+            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
+                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+        }
+
+        [HttpPost]
+        [Route("api/test/UserWithRolesOrPermission")]
+        [IDFAuthUserWithRoleOrPermission("Administrators","Entity1", "PermissionType1")]
+        public async Task<IActionResult> TestAuthUserWithRolesOrPermission(
+            [FromHeader] string userToken
+            , string requesterAuthInfo)
+        {
+            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
+                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
         }
 
 
-
+        public string ConvertAuthResultToShortString(AuthResult authResult)
+        {
+            return $"Auth Test:{Environment.NewLine}AuthMode: {authResult.AuthenticationMode.ToString()}, UserId: {authResult.UserToken.User.Id}, UserName: {authResult.UserToken.User.UserName}";
+        }
     }
 }

@@ -31,10 +31,11 @@ namespace CMouss.IdentityFramework.API.Serving
             const String entity = "Auth";
             
             public const string UserLogin = Base + "/" + entity + "/UserLogin";
-
+            public const string UserToken = Base + "/" + entity + "/UserToken";
 
 
             public const string AppLogin = Base + "/" + entity + "/AppLogin";
+            public const string AppAccess = Base + "/" + entity + "/AppAccess";
 
 
         }

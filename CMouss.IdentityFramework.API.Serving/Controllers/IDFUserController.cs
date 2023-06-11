@@ -48,6 +48,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Search
         [HttpPost]
         [Route(APIRoutes.User.Search)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User","Search")]
         public IActionResult Search(
             [FromBody] IDFUserRequestModels.Search model
            , [FromHeader] string userToken
@@ -525,126 +526,126 @@ namespace CMouss.IdentityFramework.API.Serving
         #endregion
 
 
-       // #region Validate User Role
-       // [HttpPost]
-       // [Route(APIRoutes.User.ValidateUserRole)]
-       // public IActionResult ValidateUserRole(
-       //     [FromBody] Models.IDFUserRequestModels.ValidateUserRole model
-       //    , [FromHeader] string userToken
-       //)
-       // {
-       //     #region Validate Token
-       //     UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-       //     if (userToken == null)
-       //     {
-       //         return Unauthorized(Messages.IncorrectToken);
-       //     }
+        #region Validate User Role
+        [HttpPost]
+        [Route(APIRoutes.User.ValidateUserRole)]
+        public IActionResult ValidateUserRole(
+            [FromBody] Models.IDFUserRequestModels.ValidateUserRole model
+           , [FromHeader] string userToken
+       )
+        {
+            #region Validate Token
+            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
+            if (userToken == null)
+            {
+                return Unauthorized(Messages.IncorrectToken);
+            }
 
-       //     if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserRole"))
-       //     {
-       //         return Unauthorized();
-       //     }
+            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserRole"))
+            {
+                return Unauthorized();
+            }
 
-       //     #endregion
+            #endregion
 
-       //     BooleanResponseModel result = new();
-       //     try
-       //     {
-                
-       //         bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleId);
-       //         result.ResponseStatus.SetAsSuccess();
-       //         result.Result = res;
-       //     }
-       //     catch (Exception ex)
-       //     {
-       //         result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
-       //         return StatusCode(400, result);
-       //     }
+            BooleanResponseModel result = new();
+            try
+            {
 
-       //     return Ok(result);
-       // }
-       // #endregion
+                bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleId);
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
+            }
+            catch (Exception ex)
+            {
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
+            }
 
-       // #region Validate User Any Role
-       // [HttpPost]
-       // [Route(APIRoutes.User.ValidateUserAnyRole)]
-       // public IActionResult ValidateUserAnyRole(
-       //     [FromBody] Models.IDFUserRequestModels.ValidateUserAnyRole model
-       //    , [FromHeader] string userToken
-       //)
-       // {
-       //     #region Validate Token
-       //     UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-       //     if (userToken == null)
-       //     {
-       //         return Unauthorized(Messages.IncorrectToken);
-       //     }
+            return Ok(result);
+        }
+        #endregion
 
-       //     if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserAnyRole"))
-       //     {
-       //         return Unauthorized();
-       //     }
+        #region Validate User Any Role
+        [HttpPost]
+        [Route(APIRoutes.User.ValidateUserAnyRole)]
+        public IActionResult ValidateUserAnyRole(
+            [FromBody] Models.IDFUserRequestModels.ValidateUserAnyRole model
+           , [FromHeader] string userToken
+       )
+        {
+            #region Validate Token
+            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
+            if (userToken == null)
+            {
+                return Unauthorized(Messages.IncorrectToken);
+            }
 
-       //     #endregion
+            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserAnyRole"))
+            {
+                return Unauthorized();
+            }
 
-       //     BooleanResponseModel result = new();
-       //     try
-       //     {
+            #endregion
 
-       //         bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleIds);
-       //         result.ResponseStatus.SetAsSuccess();
-       //         result.Result = res;
-       //     }
-       //     catch (Exception ex)
-       //     {
-       //         result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
-       //         return StatusCode(400, result);
-       //     }
+            BooleanResponseModel result = new();
+            try
+            {
 
-       //     return Ok(result);
-       // }
-       // #endregion
+                bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleIds);
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
+            }
+            catch (Exception ex)
+            {
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
+            }
+
+            return Ok(result);
+        }
+        #endregion
 
 
-       // #region Validate Token Role
-       // [HttpPost]
-       // [Route(APIRoutes.User.ValidateTokenRole)]
-       // public IActionResult ValidateTokenRole(
-       //     [FromBody] Models.IDFUserRequestModels.ValidateTokenRole model
-       //    , [FromHeader] string userToken
-       //)
-       // {
-       //     #region Validate Token
-       //     UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-       //     if (userToken == null)
-       //     {
-       //         return Unauthorized(Messages.IncorrectToken);
-       //     }
+        #region Validate Token Role
+        [HttpPost]
+        [Route(APIRoutes.User.ValidateTokenRole)]
+        public IActionResult ValidateTokenRole(
+            [FromBody] Models.IDFUserRequestModels.ValidateTokenRole model
+           , [FromHeader] string userToken
+       )
+        {
+            #region Validate Token
+            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
+            if (userToken == null)
+            {
+                return Unauthorized(Messages.IncorrectToken);
+            }
 
-       //     if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateTokenRole"))
-       //     {
-       //         return Unauthorized();
-       //     }
+            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateTokenRole"))
+            {
+                return Unauthorized();
+            }
 
-       //     #endregion
+            #endregion
 
-       //     BooleanResponseModel result = new();
-       //     try
-       //     {
+            BooleanResponseModel result = new();
+            try
+            {
 
-       //         AuthResult res = IDFManager.AuthService.AuthUserTokenWithRole(model.Token, model.RoleId);
-       //         result.ResponseStatus.SetAsSuccess();
-       //         result.Result = res;
-       //     }
-       //     catch (Exception ex)
-       //     {
-       //         result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
-       //         return StatusCode(400, result);
-       //     }
+                bool res = IDFManager.UserServices.ValidateUserRole(model.Token, model.RoleId);
+                result.ResponseStatus.SetAsSuccess();
+                result.Result = res;
+            }
+            catch (Exception ex)
+            {
+                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
+                return StatusCode(400, result);
+            }
 
-       //     return Ok(result);
-       // }
-       // #endregion
+            return Ok(result);
+        }
+        #endregion
 
        // #region Validate Token Any Role
        // [HttpPost]
@@ -672,7 +673,7 @@ namespace CMouss.IdentityFramework.API.Serving
        //     try
        //     {
 
-       //         bool res = IDFManager.UserServices.ValidateTokenRole(model.Token, model.RoleIds);
+       //         bool res = IDFManager.UserServices.(model.Token, model.RoleIds);
        //         result.ResponseStatus.SetAsSuccess();
        //         result.Result = res;
        //     }

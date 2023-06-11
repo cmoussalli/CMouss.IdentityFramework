@@ -16,16 +16,17 @@ namespace CMouss.IdentityFramework.API.Serving
 
         #region Login
         [HttpPost]
-        [Route(APIRoutes.User.Login)]
-        public IActionResult Login(
+        [Route(APIRoutes.Auth.UserLogin)]
+        
+        public IActionResult UserLogin( 
              [FromHeader] string username
             , [FromHeader] string password
         )
         {
-            IDFUserResponseModels.Login result = new();
+            IDFUserResponseModels.UserLogin result = new();
             try
             {
-                UserToken dbUserToken = IDFManager.UserServices.UserLogin(username, password);
+                UserToken dbUserToken = IDFManager.AuthService.UserLogin(username, password);
                 if (!String.IsNullOrEmpty(dbUserToken.Token))
                 {
                     result.ResponseStatus.SetAsSuccess();
@@ -43,14 +44,15 @@ namespace CMouss.IdentityFramework.API.Serving
         }
         #endregion
 
-        #region Validate UserTooken
+        #region Validate UserToken
         [HttpPost]
-        [Route(APIRoutes.User.ValidateToken)]
-        public IActionResult ValidateToken(
+        
+        [Route(APIRoutes.Auth.UserToken)]
+        public IActionResult UserToken(
              [FromHeader] string userToken
         )
         {
-            IDFUserResponseModels.Login result = new();
+            IDFUserResponseModels.UserLogin result = new();
             try
             {
                 UserToken dbUserToken = IDFManager.UserTokenServices.Validate(userToken);
@@ -73,47 +75,9 @@ namespace CMouss.IdentityFramework.API.Serving
 
 
 
-        #region Validate User Role
-        [HttpPost]
-        [Route(APIRoutes.User.ValidateUserRole)]
-        public IActionResult ValidateUserRole(
-            [FromBody] Models.IDFUserRequestModels.ValidateUserRole model
-           , [FromHeader] string userToken
-       )
-        {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
 
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserRole"))
-            {
-                return Unauthorized();
-            }
 
-            #endregion
 
-            BooleanResponseModel result = new();
-            try
-            {
-                
-                bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleId);
-                result.ResponseStatus.SetAsSuccess();
-                result.Result = res;
-            }
-            catch (Exception ex)
-            {
-                result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
-                return StatusCode(400, result);
-            }
-
-            return Ok(result);
-        }
-        #endregion
-
-      
 
 
 

@@ -9,7 +9,7 @@ namespace CMouss.IdentityFramework.API.Models
     public class IDFUserResponseModels
     {
 
-        public class Login : GenericResponseModel
+        public class UserLogin : GenericResponseModel
         {
             public UserToken UserToken { get; set; }
         }

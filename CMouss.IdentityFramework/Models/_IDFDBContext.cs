@@ -68,7 +68,6 @@ namespace CMouss.IdentityFramework
             {
                 string adminUserID = IDFManager.UserServices.Create(IDFManager.AdministratorUserName, IDFManager.AdministratorPassword, IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com",false,true);
                 IDFManager.UserServices.GrantRole(adminUserID, adminRoleID);
-
             }
         }
 
