@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using CMouss.IdentityFramework.API.Models;
 using CMouss.IdentityFramework.API.Serving;
+using Newtonsoft.Json;
 
 namespace CMouss.IdentityFramework.API.Serving
 {
@@ -52,23 +53,9 @@ namespace CMouss.IdentityFramework.API.Serving
         public IActionResult Search(
             [FromBody] IDFUserRequestModels.Search model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Search"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
-
             IDFUserResponseModels.Search result = new();
             try
             {
@@ -94,26 +81,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Details
         [HttpPost]
         [Route(APIRoutes.User.Details)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Details")]
         public IActionResult Details(
             [FromBody] Models.IDFUserRequestModels.Details model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized();
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Details"))
-                {
-                    return Unauthorized();
-                }
-            }
-            #endregion
-
             IDFUserResponseModels.Details result = new();
             try
             {
@@ -132,24 +106,12 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Create
         [HttpPost]
         [Route(APIRoutes.User.Create)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Create")]
         public IActionResult Create(
             [FromBody] Models.IDFUserRequestModels.Create model
-           , [FromHeader] string userToken)
+           , [FromHeader] string userToken
+            , string requesterAuthInfo)
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Create"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -169,26 +131,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Update
         [HttpPost]
         [Route(APIRoutes.User.Update)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Update")]
         public IActionResult Update(
             [FromBody] Models.IDFUserRequestModels.Update model
            , [FromHeader] string userToken
+           , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Update"))
-                {
-                    return Unauthorized();
-                }
-            }
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -208,28 +157,14 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Delete
         [HttpPost]
         [Route(APIRoutes.User.Delete)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Delete")]
         public IActionResult Delete(
             [FromBody] Models.IDFUserRequestModels.Delete model
            , [FromHeader] string userToken
+           , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Delete"))
-                {
-                    return Unauthorized();
-                }
-            }
-            #endregion
-
             GenericResponseModel result = new();
-
             try
             {
                 IDFManager.UserServices.Delete(model.UserId);
@@ -249,32 +184,16 @@ namespace CMouss.IdentityFramework.API.Serving
 
 
 
-
-
-
         #region Change Password
         [HttpPost]
         [Route(APIRoutes.User.ChangePassword)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ChangePassword")]
         public IActionResult ChangePassword(
             [FromBody] Models.IDFUserRequestModels.ChangePassword model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized();
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ChangePassword"))
-                {
-                    return Unauthorized();
-                }
-            }
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -297,28 +216,14 @@ namespace CMouss.IdentityFramework.API.Serving
         public IActionResult ChangeMyPassword(
             [FromBody] Models.IDFUserRequestModels.ChangeMyPassword model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized();
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                return Unauthorized();
-                //if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ChangePassword"))
-                //{
-                //    return Unauthorized();
-                //}
-            }
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.ChangePassword(model.UserId, model.NewPassword, model.ChangePrivateKey);
+            AuthResult authResult = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+                IDFManager.UserServices.ChangePassword(authResult.UserToken.UserId, model.NewPassword, model.ChangePrivateKey);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -335,26 +240,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Lock
         [HttpPost]
         [Route(APIRoutes.User.Lock)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Lock")]
         public IActionResult Lock(
             [FromBody] Models.IDFUserRequestModels.Lock model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Lock"))
-                {
-                    return Unauthorized();
-                }
-            }
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -374,26 +266,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Unlock
         [HttpPost]
         [Route(APIRoutes.User.Lock)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Unlock")]
         public IActionResult Unlock(
             [FromBody] Models.IDFUserRequestModels.Lock model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-            if (token.UserId.ToLower() != model.UserId.ToLower())
-            {
-                if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "Unlock"))
-                {
-                    return Unauthorized();
-                }
-            }
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -414,25 +293,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Get Roles
         [HttpPost]
         [Route(APIRoutes.User.GetRoles)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "GetRoles")]
         public IActionResult GetRoles(
             [FromBody] Models.IDFUserRequestModels.GetRoles model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "GetRoles"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             IDFUserResponseModels.GetRoles result = new();
             try
             {
@@ -452,25 +319,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Grant Role
         [HttpPost]
         [Route(APIRoutes.User.GrantRole)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "GrantRole")]
         public IActionResult GrantRole(
             [FromBody] Models.IDFUserRequestModels.GrantRole model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "GrantRole"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -490,25 +345,13 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Revoke Role
         [HttpPost]
         [Route(APIRoutes.User.RevokeRole)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "GrantRole")]
         public IActionResult RevokeRole(
             [FromBody] Models.IDFUserRequestModels.RevokeRole model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "RevokeRole"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             GenericResponseModel result = new();
             try
             {
@@ -529,29 +372,16 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Validate User Role
         [HttpPost]
         [Route(APIRoutes.User.ValidateUserRole)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ValidateUserRole")]
         public IActionResult ValidateUserRole(
             [FromBody] Models.IDFUserRequestModels.ValidateUserRole model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserRole"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             BooleanResponseModel result = new();
             try
             {
-
                 bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleId);
                 result.ResponseStatus.SetAsSuccess();
                 result.Result = res;
@@ -569,29 +399,16 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Validate User Any Role
         [HttpPost]
         [Route(APIRoutes.User.ValidateUserAnyRole)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ValidateUserAnyRole")]
         public IActionResult ValidateUserAnyRole(
             [FromBody] Models.IDFUserRequestModels.ValidateUserAnyRole model
            , [FromHeader] string userToken
+            , string requesterAuthInfo
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateUserAnyRole"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             BooleanResponseModel result = new();
             try
             {
-
                 bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleIds);
                 result.ResponseStatus.SetAsSuccess();
                 result.Result = res;
@@ -610,29 +427,15 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Validate Token Role
         [HttpPost]
         [Route(APIRoutes.User.ValidateTokenRole)]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ValidateTokenRole")]
         public IActionResult ValidateTokenRole(
             [FromBody] Models.IDFUserRequestModels.ValidateTokenRole model
            , [FromHeader] string userToken
        )
         {
-            #region Validate Token
-            UserToken token = IDFManager.UserTokenServices.Validate(userToken);
-            if (userToken == null)
-            {
-                return Unauthorized(Messages.IncorrectToken);
-            }
-
-            if (!IDFManager.UserServices.ValidateUserRoleOrPermission(token.UserId, IDFManager.AdministratorRoleId, "Users", "ValidateTokenRole"))
-            {
-                return Unauthorized();
-            }
-
-            #endregion
-
             BooleanResponseModel result = new();
             try
             {
-
                 bool res = IDFManager.UserServices.ValidateUserRole(model.Token, model.RoleId);
                 result.ResponseStatus.SetAsSuccess();
                 result.Result = res;

@@ -28,7 +28,7 @@ namespace CMouss.IdentityFramework
 
 
 
-    [Serializable] public class NotFoundException : Exception { public NotFoundException() { } }
+    [Serializable] public class NotFoundException : Exception { public NotFoundException() {  } }
 
     [Serializable] public class UserNotFoundException : Exception { public UserNotFoundException() { } }
     [Serializable] public class RoleNotFoundException : Exception { public RoleNotFoundException() { } }

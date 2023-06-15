@@ -179,6 +179,18 @@ namespace CMouss.IdentityFramework
 
         #endregion
 
+        #region Services
+        public static RoleService RoleServices = new RoleService();
+        public static UserService UserServices = new UserService();
+        public static UserTokenService UserTokenServices = new UserTokenService();
+        public static AppAccessService AppAccessServices = new AppAccessService();
+        public static AuthService AuthService = new AuthService();
+        public static EntityService EntityService = new EntityService();
+        public static PermissionTypeService PermissionTypeService = new PermissionTypeService();
+        public static PermissionService PermissionService = new PermissionService();
+
+        #endregion
+
 
         public static void Configure(IDFManagerConfig config)
         {
@@ -244,11 +256,6 @@ namespace CMouss.IdentityFramework
             }
         }
 
-        public static RoleService RoleServices = new RoleService();
-        public static UserService UserServices = new UserService();
-        public static UserTokenService UserTokenServices = new UserTokenService();
-        public static AppAccessService AppAccessServices = new AppAccessService();
-        public static AuthService AuthService = new AuthService();
 
 
 

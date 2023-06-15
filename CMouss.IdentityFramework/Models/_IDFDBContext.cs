@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework
 {
-    public partial class IDFDBContext:DbContext
+    public partial class IDFDBContext : DbContext
     {
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -52,8 +52,8 @@ namespace CMouss.IdentityFramework
             //Add Default Records
             string adminRoleID = Helpers.GenerateId();
             //string adminUserID = Helpers.GenerateId();
-            if(!string.IsNullOrEmpty( IDFManager.AdministratorRoleId) )
-                { adminRoleID = IDFManager.AdministratorRoleId; }
+            if (!string.IsNullOrEmpty(IDFManager.AdministratorRoleId))
+            { adminRoleID = IDFManager.AdministratorRoleId; }
             //Create Administrator Role
             IDFDBContext db = new IDFDBContext();
             List<Role> roles = db.Roles.Where(o => o.Title.ToLower() == IDFManager.AdministratorRoleName.ToLower()).ToList();
@@ -66,11 +66,61 @@ namespace CMouss.IdentityFramework
             List<User> users = db.Users.Where(o => o.UserName.ToLower() == IDFManager.AdministratorUserName.ToLower()).ToList();
             if (users.Count == 0)
             {
-                string adminUserID = IDFManager.UserServices.Create(IDFManager.AdministratorUserName, IDFManager.AdministratorPassword, IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com",false,true);
+                string adminUserID = IDFManager.UserServices.Create(IDFManager.AdministratorUserName, IDFManager.AdministratorPassword, IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com", false, true);
                 IDFManager.UserServices.GrantRole(adminUserID, adminRoleID);
             }
+
+
+            List<Entity> entities = IDFManager.EntityService.GetAll();
+            if (!entities.Exists(o => o.Id == "User"))
+            {
+                Entity userEntity = new() { Id = "User", Title = "User" };
+                db.Entities.Add(userEntity);
+                db.SaveChanges();
+            }
+            CreatePermissionAndAssignToRole("User", "Search", adminRoleID);
+
+            CreatePermissionAndAssignToRole("User", "Details", adminRoleID);
+            CreatePermissionAndAssignToRole("User", "Create", adminRoleID);
+            CreatePermissionAndAssignToRole("User", "Update", adminRoleID);
+            CreatePermissionAndAssignToRole("User", "Delete", adminRoleID);
+            CreatePermissionAndAssignToRole("User", "ChangePassword", adminRoleID);
+            CreatePermissionAndAssignToRole("User", "GrantRole", adminRoleID);
+            CreatePermissionAndAssignToRole("User", "RevokeRole", adminRoleID);
+
         }
 
+        private void CreatePermissionAndAssignToRole(string entityId, string newPermissionTypeId, string roleId)
+        {
+            IDFDBContext db = new IDFDBContext();
+            if (!db.PermissionTypes.Any(o => o.Id == newPermissionTypeId))
+            {
+                PermissionType searchPermissionType = new()
+                {
+                    Id = newPermissionTypeId
+                    ,
+                    Title = newPermissionTypeId
+                };
+                db.PermissionTypes.Add(searchPermissionType);
+                db.SaveChanges();
+            }
+
+            if (!db.Permissions.Any(o => o.PermissionTypeId == newPermissionTypeId && o.EntityId == entityId && o.RoleId == roleId))
+            {
+                Permission newPermission = new()
+                {
+                    Id = Helpers.GenerateId()
+                    ,
+                    EntityId = entityId
+                    ,
+                    PermissionTypeId = newPermissionTypeId
+                    ,
+                    RoleId = roleId
+                };
+                db.Permissions.Add(newPermission);
+                db.SaveChanges();
+            }
+        }
 
         public void CloseConnection()
         {

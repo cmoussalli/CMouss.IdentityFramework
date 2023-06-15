@@ -63,7 +63,6 @@ namespace CMouss.IdentityFramework.API.Models
 
         public class ChangeMyPassword
         {
-            public string UserId { get; set; }
             public string OldPassword { get; set; }
             public string NewPassword { get; set; }
             public bool ChangePrivateKey { get; set; }

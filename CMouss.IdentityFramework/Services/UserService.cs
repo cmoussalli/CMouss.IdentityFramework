@@ -15,7 +15,7 @@ namespace CMouss.IdentityFramework
             List<User> lst = IDFManager.Context.Users.Include(o => o.Apps).Where(o => o.Id == id && o.IsDeleted == false).ToList();
             if (lst.Count == 0)
             {
-                throw new NotFoundException();
+                throw new Exception(Messages.UserNotFound);
             }
             return lst[0];
         }
@@ -54,8 +54,8 @@ namespace CMouss.IdentityFramework
                 ).ToList();
             if (lst.Count > 0)
             {
-                if (lst[0].UserName.ToLower() == userName.ToLower()) { throw new Exception("Username already exists"); }
-                if (lst[0].Email.ToLower() == email.ToLower()) { throw new Exception("EMail already exists"); }
+                if (lst[0].UserName.ToLower() == userName.ToLower()) { throw new Exception(Messages.UserNameIsTaken); }
+                if (lst[0].Email.ToLower() == email.ToLower()) { throw new Exception(Messages.EMailIsRegistered); }
             }
             User o = new User();
             o.Id = Helpers.GenerateId();
@@ -110,13 +110,14 @@ namespace CMouss.IdentityFramework
             List<User> lst = IDFManager.Context.Users.Where(o => o.Id == id).ToList();
             if (IDFManager.Context.Users.Any(o =>
                  o.Id != id
-                     && (o.FullName.ToLower() == fullName.ToLower()
-                     || o.Email.ToLower() == email.ToLower()
+                     && (
+                      //o.FullName.ToLower() == fullName.ToLower()
+                      o.Email.ToLower() == email.ToLower()
                      )
                 )
             )
             {
-                throw new DuplicateValuesAreNotAllowedException();
+                throw new Exception(Messages.EMailIsRegistered);
             }
             if (lst.Count > 0)
             {
@@ -137,7 +138,7 @@ namespace CMouss.IdentityFramework
             User user = IDFManager.Context.Users.First(o => o.Id == id);
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new Exception(Messages.UserNotFound);
             }
             else
             {
@@ -145,6 +146,10 @@ namespace CMouss.IdentityFramework
                 //Delete all user tokens
                 UserTokenService userTokenService = new UserTokenService();
                 userTokenService.DeleteUserTokens(id);
+
+                //Delete User
+                IDFManager.Context.Users.Remove(user);
+                IDFManager.Context.SaveChanges();
             }
             IDFManager.Context.SaveChanges();
         }
@@ -152,27 +157,21 @@ namespace CMouss.IdentityFramework
         public void Lock(string id)
         {
             List<User> lst = IDFManager.Context.Users.Where(o => o.Id == id).ToList();
-            if (lst.Count > 0)
+            if (lst.Count == 0)
             {
-                lst[0].IsLocked = true;
+                throw new Exception(Messages.UserNotFound);
             }
-            else
-            {
-                throw new NotFoundException();
-            }
+            lst[0].IsLocked = true;
             IDFManager.Context.SaveChanges();
         }
         public void UnLock(string id)
         {
             List<User> lst = IDFManager.Context.Users.Where(o => o.Id == id).ToList();
-            if (lst.Count > 0)
+            if (lst.Count == 0)
             {
-                lst[0].IsLocked = false;
+                throw new Exception(Messages.UserNotFound);
             }
-            else
-            {
-                throw new NotFoundException();
-            }
+            lst[0].IsLocked = false;
             IDFManager.Context.SaveChanges();
         }
 
@@ -196,7 +195,7 @@ namespace CMouss.IdentityFramework
             User o = IDFManager.Context.Users.Find(id);
             if (o == null)
             {
-                throw new NotFoundException();
+                throw new Exception(Messages.UserNotFound);
             }
             if (changePrivateKey)
             {
@@ -212,11 +211,11 @@ namespace CMouss.IdentityFramework
             User o = IDFManager.Context.Users.First(o => o.UserName.ToLower() == userName.ToLower());
             if (o == null)
             {
-                throw new NotFoundException();
+                throw new Exception(Messages.UserNotFound);
             }
             if (Helpers.Decrypt(o.Password, o.PrivateKey) != oldPassword)
             {
-                throw new IncorrectPasswordException();
+                throw new Exception(Messages.OldPasswordDidntMatch);
             }
             if (changePrivateKey)
             {
@@ -234,7 +233,7 @@ namespace CMouss.IdentityFramework
         public List<Role> GetRoles(string userId)
         {
             List<User> users = IDFManager.Context.Users.Include(o => o.Roles).Where(o => o.Id == userId).ToList();
-            if (users.Count == 0) { throw new NotFoundException(); }
+            if (users.Count == 0) { throw new Exception(Messages.UserNotFound) ; }
             return users[0].Roles;
         }
         #endregion
@@ -243,13 +242,13 @@ namespace CMouss.IdentityFramework
         public void GrantRole(string userId, string roleId)
         {
             List<User> users = IDFManager.Context.Users.Include(o => o.Roles).Where(o => o.Id == userId).ToList();
-            if (users.Count == 0) { throw new UserNotFoundException(); }
+            if (users.Count == 0) { throw new Exception(Messages.UserNotFound); }
             List<Role> roles = IDFManager.Context.Roles.Where(o => o.Id == roleId).ToList();
-            if (roles.Count == 0) { throw new RoleNotFoundException(); }
+            if (roles.Count == 0) { throw new Exception(Messages.RoleNotFound); }
 
             if (users[0].Roles.Contains(roles[0]))
             {
-                throw new AlreadyExistException();
+                throw new Exception(Messages.RoleAlreadyAssigned);
             }
 
             users[0].Roles.Add(roles[0]);
@@ -262,14 +261,14 @@ namespace CMouss.IdentityFramework
         public void RevokeRole(string userId, string roleId)
         {
             List<User> users = IDFManager.Context.Users.Where(o => o.Id == userId).ToList();
-            if (users.Count == 0) { throw new UserNotFoundException(); }
+            if (users.Count == 0) { throw new Exception(Messages.UserNotFound); }
             List<Role> roles = IDFManager.Context.Roles.Where(o => o.Id == roleId).ToList();
-            if (roles.Count == 0) { throw new RoleNotFoundException(); }
+            if (roles.Count == 0) { throw new Exception(Messages.RoleNotFound); }
 
             List<Role> userRoles = users[0].Roles.Where(o =>
                o.Id == roleId
                 ).ToList();
-            if (userRoles.Count == 0) { throw new NotFoundException(); }
+            if (userRoles.Count == 0) { throw new Exception(Messages.RoleNotAssigned); }
             users[0].Roles.Remove(userRoles[0]);
             IDFManager.Context.SaveChanges();
         }
@@ -376,7 +375,7 @@ namespace CMouss.IdentityFramework
         {
             List<EntityAllowedActionsModel> result = new();
             List<User> users = IDFManager.Context.Users.Include(o => o.Roles).ThenInclude(r => r.Permissions).Where(o => o.Id == userId).ToList();
-            if (users.Count == 0) { throw new NotFoundException(); }
+            if (users.Count == 0) { throw new Exception(Messages.UserNotFound); }
             List<Permission> permissions = users[0].Roles.SelectMany(r => r.Permissions).ToList();
             List<Permission> permissionsWithRelatedData = IDFManager.Context.Permissions.Include(p => p.Entity).Include(p => p.PermissionType).Where(p => permissions.Select(s => s.Id).Contains(p.Id)).ToList();   /*.Where(p => permissions.Any(a => a.Id == p.Id)).ToList();*/
 
@@ -439,7 +438,7 @@ namespace CMouss.IdentityFramework
             UserToken userToken = IDFManager.UserTokenServices.Validate(token);
             if (userToken == null)
             {
-                throw new InvalidTokenException();
+                throw new Exception(Messages.IncorrectToken);
             }
             if (ValidateUserRole(userToken.UserId, rolesId))
             {
@@ -457,7 +456,7 @@ namespace CMouss.IdentityFramework
             UserToken userToken = IDFManager.UserTokenServices.Validate(token);
             if (userToken == null)
             {
-                throw new InvalidTokenException();
+                throw new Exception(Messages.IncorrectToken);
             }
             if (ValidateUserRole(userToken.UserId, rolesIds))
             {
@@ -475,7 +474,7 @@ namespace CMouss.IdentityFramework
             UserToken userToken = IDFManager.UserTokenServices.Validate(token);
             if (userToken == null)
             {
-                throw new InvalidTokenException();
+                throw new Exception(Messages.IncorrectToken);
             }
             if (ValidateUserRole(userToken.UserId, rolesId))
             {
@@ -493,7 +492,7 @@ namespace CMouss.IdentityFramework
             UserToken userToken = IDFManager.UserTokenServices.Validate(token);
             if (userToken == null)
             {
-                throw new InvalidTokenException();
+                throw new Exception(Messages.IncorrectToken);
             }
             if (ValidateUserRole(userToken.UserId, rolesIds))
             {

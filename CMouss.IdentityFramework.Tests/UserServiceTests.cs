@@ -177,7 +177,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void UserLogin_Ok()
         {
-            UserToken t = IDFManager.UserServices.UserLogin("Username1", "P@ssw0rd");
+            UserToken t = IDFManager.AuthService.UserLogin("Username1", "P@ssw0rd");
             Assert.IsNotNull(t);
         }
         [TestMethod]
@@ -185,7 +185,7 @@ namespace CMouss.IdentityFramework.Tests
         {
             try
             {
-                UserToken t = IDFManager.UserServices.UserLogin("WrongUsername", "P@ssw0rd");
+                UserToken t = IDFManager.AuthService.UserLogin("WrongUsername", "P@ssw0rd");
                 Assert.Fail();
             }
             catch (Exception ex)
@@ -203,7 +203,7 @@ namespace CMouss.IdentityFramework.Tests
         {
             try
             {
-                UserToken t = IDFManager.UserServices.UserLogin("Username1", "WrongP@ssw0rd");
+                UserToken t = IDFManager.AuthService.UserLogin("Username1", "WrongP@ssw0rd");
                 Assert.Fail();
             }
             catch (Exception ex)
