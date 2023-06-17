@@ -17,59 +17,51 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Login
         [HttpPost]
         [Route(APIRoutes.Auth.UserLogin)]
-        
-        public IActionResult UserLogin( 
+
+        public IActionResult UserLogin(
              [FromHeader] string username
             , [FromHeader] string password
         )
         {
-            IDFUserResponseModels.UserLogin result = new();
+            IDFAuthResponseModels.IDFAuth result = new();
             try
             {
-                UserToken dbUserToken = IDFManager.AuthService.UserLogin(username, password);
-                if (!String.IsNullOrEmpty(dbUserToken.Token))
-                {
-                    result.ResponseStatus.SetAsSuccess();
-                    result.UserToken = Converters.UserTokenConverter.ToAPIUserToken(dbUserToken);
-                    return Ok(result);
-                }
+                AuthResult authResult = IDFManager.AuthService.AuthUserLogin(username, password);
+                result.ResponseStatus.SetAsSuccess();
+                result.AuthResult = Converters.AuthResultConverter.ToAPIAuthResult(authResult);
+
             }
             catch (Exception ex)
             {
                 result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
-            result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = "Incorrect token" });
-            return StatusCode(400, result);
+            return Ok(result);
         }
         #endregion
 
         #region Validate UserToken
         [HttpPost]
-        
+
         [Route(APIRoutes.Auth.UserToken)]
         public IActionResult UserToken(
              [FromHeader] string userToken
         )
         {
-            IDFUserResponseModels.UserLogin result = new();
+            IDFAuthResponseModels.IDFAuth result = new();
             try
             {
-                UserToken dbUserToken = IDFManager.UserTokenServices.Validate(userToken);
-                if (!String.IsNullOrEmpty(dbUserToken.Token))
-                {
-                    result.ResponseStatus.SetAsSuccess();
-                    result.UserToken = Converters.UserTokenConverter.ToAPIUserToken(dbUserToken);
-                    return Ok(result);
-                }
+                AuthResult authResult = IDFManager.AuthService.AuthUserToken(userToken);
+                result.ResponseStatus.SetAsSuccess();
+                result.AuthResult = Converters.AuthResultConverter.ToAPIAuthResult(authResult);
             }
             catch (Exception ex)
             {
                 result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = ex.Message });
                 return StatusCode(400, result);
             }
-            result.ResponseStatus.SetAsFailed(new ErrorModel() { Message = "Incorrect token" });
-            return StatusCode(400, result);
+            return Ok(result);
+
         }
         #endregion
 

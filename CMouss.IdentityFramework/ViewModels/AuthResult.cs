@@ -21,6 +21,23 @@ namespace CMouss.IdentityFramework
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public AppAccess AppAccess { get; set; }
 
+        public AuthResult()
+        {
+        }
+
+        public AuthResult(UserToken userToken)
+        {
+            SecurityValidationResult = SecurityValidationResult.Ok;
+            AuthenticationMode = IDFAuthenticationMode.User;
+            UserToken = userToken;
+        }
+
+        public AuthResult(AppAccess appAccess)
+        {
+            SecurityValidationResult = SecurityValidationResult.Ok;
+            AuthenticationMode = IDFAuthenticationMode.App;
+            AppAccess = appAccess;
+        }
 
 
     }

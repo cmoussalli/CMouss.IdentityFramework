@@ -13,6 +13,8 @@ namespace CMouss.IdentityFramework
         public static string DuplicateValuesAreNotAllowed = "Duplicate values are not allowed";
         public static string AlreadyExists = "Already exists";
         
+
+        public static string IncorrectCredentials = "Incorrect credentials";
         public static string IncorrectPassword = "Incorrect password";
         public static string IncorrectToken = "Incorrect token";
 

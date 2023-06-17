@@ -23,9 +23,13 @@ namespace CMouss.IdentityFramework
         UnknownError = 1,
         IncorrectParameters = 6,
 
-        IncorrectToken = 11,
-        IncorrectAppAccess = 12,
-        UnAuthorized = 16,
+        IncorrectCredentials = 11,
+
+        IncorrectToken = 21,
+        IncorrectAppAccess = 22,
+        UnAuthorized = 26,
+
+
     }
 
 
