@@ -24,7 +24,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void Find_NotExists()
         {
-            string newId =  IDFManager.UserServices.Create("UserTestExists_False", "P@ssw0rd", "User Test Exists_False", "UserTestExists_False@mail.com");
+            string newId = IDFManager.UserServices.Create("UserTestExists_False", "P@ssw0rd", "User Test Exists_False", "UserTestExists_False@mail.com");
 
             db = new IDFDBContext();
             try
@@ -44,7 +44,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void Create()
         {
-            string newId = IDFManager.UserServices.Create("UserTestCreate", "P@ssw0rd", "UserTest Create", "UserTestCreate@mail.com",false,true);
+            string newId = IDFManager.UserServices.Create("UserTestCreate", "P@ssw0rd", "UserTest Create", "UserTestCreate@mail.com", false, true);
 
             db = new IDFDBContext();
             User o = db.Users.Find(newId);
@@ -171,50 +171,38 @@ namespace CMouss.IdentityFramework.Tests
             db.Users.Add(user);
             db.SaveChanges();
 
-            IDFManager.UserServices.ChangeMyPassword("UserXChangeMyPassword_Ok", "P@ssw0rd","NewP@ssw0rd",false);
+            IDFManager.UserServices.ChangeMyPassword("UserXChangeMyPassword_Ok", "P@ssw0rd", "NewP@ssw0rd", false);
         }
 
         [TestMethod]
         public void UserLogin_Ok()
         {
-            UserToken t = IDFManager.AuthService.AuthUserLogin("Username1", "P@ssw0rd");
-            Assert.IsNotNull(t);
+            AuthResult ar = IDFManager.AuthService.AuthUserLogin("Username1", "P@ssw0rd");
+
+            Assert.IsNotNull(ar.UserToken);
         }
         [TestMethod]
         public void UserLogin_UserNameNotFound()
         {
-            try
+            AuthResult ar = IDFManager.AuthService.AuthUserLogin("WrongUsername", "P@ssw0rd");
+            if (ar.SecurityValidationResult == SecurityValidationResult.IncorrectCredentials)
             {
-                UserToken t = IDFManager.AuthService.AuthUserLogin("WrongUsername", "P@ssw0rd");
-                Assert.Fail();
+                Assert.IsTrue(true);
+                return;
             }
-            catch (Exception ex)
-            {
-                if (ex.Message == Messages.NotFound)
-                {
-                    Assert.IsTrue(true);
-                    return;
-                }
-            }
-            Assert.IsTrue(false);
+            Assert.Fail();
         }
+
         [TestMethod]
         public void UserLogin_WrongPassword()
         {
-            try
+            AuthResult ar = IDFManager.AuthService.AuthUserLogin("Username1", "WrongP@ssw0rd");
+            if (ar.SecurityValidationResult == SecurityValidationResult.IncorrectCredentials)
             {
-                UserToken t = IDFManager.AuthService.AuthUserLogin("Username1", "WrongP@ssw0rd");
-                Assert.Fail();
+                Assert.IsTrue(true);
+                return;
             }
-            catch (Exception ex)
-            {
-                if (ex.Message == "Incorrect password")
-                {
-                    Assert.IsTrue(true);
-                    return;
-                }
-            }
-            Assert.IsTrue(false);
+            Assert.Fail();
         }
 
         [TestMethod]
@@ -542,7 +530,7 @@ namespace CMouss.IdentityFramework.Tests
 
             //Exec evaluated Method      
             db = new IDFDBContext();
-            List<string> rolesEval = new() { "123",newRoleId2};
+            List<string> rolesEval = new() { "123", newRoleId2 };
             bool eval = IDFManager.UserServices.ValidateUserRole(newUserId, rolesEval);
             Assert.IsTrue(eval);
         }
