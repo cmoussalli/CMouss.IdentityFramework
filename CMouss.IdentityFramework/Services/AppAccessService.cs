@@ -53,6 +53,46 @@ namespace CMouss.IdentityFramework
             return lst[0];
         }
 
+        public AppAccess? Validate(string appKey, string appSecret, string ipAddress)
+        {
+            List<AppAccess> lst = IDFManager.Context.AppAccess
+                .Include(o => o.App).ThenInclude(o => o.Owner)
+                .Include(o => o.AppAccessPermissions)
+                .Where(o =>
+                    o.AccessKey == appKey
+                    && o.AccessSecret == appSecret
+                    && o.ExpireDate >= DateTime.UtcNow
+                ).ToList();
+
+            if (lst.Count == 0)
+            {
+                return null;
+            }
+            if (lst.Count > 0)
+            {
+                //Save IP Address
+
+                if (lst[0].AllowedIPAddresses.Length > 0)
+                {
+                    if (lst[0].AllowedIPAddresses.Contains(ipAddress))
+                    {
+                        lst[0].LastIPAddress = ipAddress;
+                        IDFManager.Context.SaveChanges();
+                        //if (!IDFManager.AllowUserMultipleSessions)
+                        //{
+
+                        //}
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            return lst[0];
+        }
+
 
         public void Delete(string appKey, string appSecret)
         {
@@ -102,6 +142,20 @@ namespace CMouss.IdentityFramework
             IDFManager.Context.SaveChanges();
         }
 
+        public void SetAllowedIPs(string userId, string appId, string ipAddresses)
+        {
+            List<AppAccess> lst = IDFManager.Context.AppAccess.Where(o =>
+            o.UserId == userId
+            && o.AppId == appId
+            ).ToList();
+            if (lst.Count == 0)
+            {
+                throw new NotFoundException();
+            }
+            lst[0].AllowedIPAddresses = ipAddresses;
+            IDFManager.Context.SaveChanges();
+        }
+
         public int CleanExpiredAppAccesss()
         {
             List<AppAccess> lst = IDFManager.Context.AppAccess.Where(o =>
@@ -145,10 +199,10 @@ namespace CMouss.IdentityFramework
         {
             //Validate AppAccess
             List<AppAccess> appAccesses = IDFManager.Context.AppAccess.Include(o => o.AppAccessPermissions).Where(o => o.Id.ToLower() == appAccessid.ToLower()).ToList();
-            if (appAccesses.Count == 0) { throw new AppAccessNotFoundException() ; }
+            if (appAccesses.Count == 0) { throw new AppAccessNotFoundException(); }
             //Valdiate AppPermissionType  
             List<AppPermissionType> appPermissionTypes = IDFManager.Context.AppPermissionTypes.Where(o => o.Id.ToLower() == appPermissionTypeId.ToLower()).ToList();
-            if (appPermissionTypes.Count == 0) { throw new AppPermissionTypeNotFoundException (); }
+            if (appPermissionTypes.Count == 0) { throw new AppPermissionTypeNotFoundException(); }
 
             if (appAccesses[0].AppAccessPermissions.Where(o => o.AppAccessId.ToLower() == appAccessid.ToLower() && appPermissionTypeId.ToLower() == o.AppPermissionTypeId.ToLower()).Count() > 0)
             {
@@ -218,7 +272,7 @@ namespace CMouss.IdentityFramework
             List<AppAccessPermission> appAccessPermissions = IDFManager.Context.AppAccessPermissions.Where(o =>
                 o.AppAccess.AccessKey.ToLower() == appAccessKey.ToLower()
                 && o.AppAccess.AccessSecret.ToLower() == appAccessSecret.ToLower()
-                //&& o.AppPermissionTypeId.ToLower() == appPermissionTypeId.ToLower()
+            //&& o.AppPermissionTypeId.ToLower() == appPermissionTypeId.ToLower()
             ).ToList();
 
             if (appAccessPermissions.Count < 1)

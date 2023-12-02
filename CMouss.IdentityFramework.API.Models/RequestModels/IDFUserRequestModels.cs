@@ -30,6 +30,7 @@ namespace CMouss.IdentityFramework.API.Models
             public string Email { get; set; }
             public bool IsLocked { get; set; }
             public bool IsActive { get; set; }
+            public string LastIPAddress { get; set; }
         }
 
         public class Update

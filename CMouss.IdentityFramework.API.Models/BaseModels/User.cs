@@ -18,6 +18,7 @@ namespace CMouss.IdentityFramework.API.Models
         public bool IsLocked { get; set; }
         public DateTimeOffset CreateDate { get; set; }
         public bool IsActive { get; set; }
+        public string LastIPAddress { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<Role> Roles { get; set; }
@@ -27,5 +28,6 @@ namespace CMouss.IdentityFramework.API.Models
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<Permission> Permissions { get; set; }
+
     }
 }

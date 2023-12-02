@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -23,5 +24,10 @@ namespace CMouss.IdentityFramework.API.Models
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<AppAccessPermission> AppAccessPermissions { get; set; } = new();
+
+
+        public string LastIPAddress { get; set; }
+
+        public string AllowedIPAddresses { get; set; }
     }
 }

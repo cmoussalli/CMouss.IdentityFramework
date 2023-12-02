@@ -40,6 +40,50 @@ namespace CMouss.IdentityFramework
             return lst[0];
         }
 
+        public UserToken? Validate(string token, string ipAddress)
+        {
+            List<UserToken> lst = IDFManager.Context.UserTokens.Include(o => o.User).Where(o =>
+                o.Token == token
+                && o.ExpireDate >= DateTime.Now
+                ).ToList();
+            if (lst.Count == 0)
+            {
+                return null;
+            }
+
+            if (!IDFManager.AllowUserMultipleSessions)
+            {
+                if ( lst[0].User.LastIPAddress.Contains(ipAddress))
+                {
+                    List<UserToken> killTokens = IDFManager.Context.UserTokens.Where(o => o.UserId == lst[0].UserId && o.IPAddress.ToLower() != ipAddress.ToLower()).ToList();
+                    IDFManager.Context.RemoveRange(killTokens);
+                    lst[0].User.LastIPAddress = ipAddress;
+                    IDFManager.Context.SaveChanges();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                if (lst[0].User.LastIPAddress.Contains(ipAddress))
+                {
+                    lst[0].User.LastIPAddress = ipAddress;
+                    IDFManager.Context.SaveChanges();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+
+            return lst[0];
+        }
+
+
+
         public void Delete(string token)
         {
             List<UserToken> lst = IDFManager.Context.UserTokens.Where(o =>
@@ -54,15 +98,20 @@ namespace CMouss.IdentityFramework
 
         public UserToken Create(string userId)
         {
-            return Create(userId, IDFManager.TokenDefaultLifeTime);
+            return Create(userId, IDFManager.TokenDefaultLifeTime,"");
+        }
+        public UserToken Create(string userId, string ipAddress)
+        {
+            return Create(userId, IDFManager.TokenDefaultLifeTime, ipAddress);
         }
 
-        public UserToken Create(string userId, LifeTime lifeTime)
+        public UserToken Create(string userId, LifeTime lifeTime, string ipAddress)
         {
             UserToken o = new UserToken();
             o.Token = Helpers.GenerateKey();
             o.ExpireDate = DateTime.Now.AddDays(lifeTime.Days).AddHours(lifeTime.Hours).AddMinutes(lifeTime.Minutes);
             o.UserId = userId;
+            o.IPAddress = ipAddress;
             IDFManager.Context.UserTokens.Add(o);
             IDFManager.Context.SaveChanges();
             return o;

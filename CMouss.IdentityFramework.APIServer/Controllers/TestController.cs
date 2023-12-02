@@ -11,6 +11,15 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
     public class TestController : Controller
     {
 
+        [HttpGet]
+        [Route("api/test")]
+        public async Task<IActionResult> Test(
+            [FromHeader] string userToken
+            , string requesterAuthInfo)
+        {
+            return Ok(Request.HttpContext.Connection.RemoteIpAddress.ToString());
+        }
+
         //[HttpPost("api/test/secureUserAndApp")]
         //[HttpPost]
         //[Route(APIRoutes.Test.TestMain)]
@@ -33,6 +42,7 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
         //    return Ok("IdentityFramework is OK");
         //}
 
+
         [HttpPost]
         [Route("api/test/usertoken")]
         [IDFAuthUser()]
@@ -53,13 +63,13 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
             , string requesterAuthInfo)
         {
             AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine 
+            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
                 + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
         }
 
         [HttpPost]
         [Route("api/test/UserWithPermission")]
-        [IDFAuthUserWithPermission("Entity1","PermissionType1")]
+        [IDFAuthUserWithPermission("Entity1", "PermissionType1")]
         public async Task<IActionResult> TestAuthUserWithPermission(
             [FromHeader] string userToken
             , string requesterAuthInfo)
@@ -71,7 +81,7 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
 
         [HttpPost]
         [Route("api/test/UserWithRolesOrPermission")]
-        [IDFAuthUserWithRoleOrPermission("Administrators","Entity1", "PermissionType1")]
+        [IDFAuthUserWithRoleOrPermission("Administrators", "Entity1", "PermissionType1")]
         public async Task<IActionResult> TestAuthUserWithRolesOrPermission(
             [FromHeader] string userToken
             , string requesterAuthInfo)

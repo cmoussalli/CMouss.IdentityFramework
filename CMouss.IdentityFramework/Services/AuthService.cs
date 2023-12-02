@@ -51,6 +51,69 @@ namespace CMouss.IdentityFramework.Services
             return result;
         }
 
+        public AuthResult AuthUserLogin(string user, string password, string ipAddress)
+        {
+            AuthResult result = new();
+            List<Role> roles = IDFManager.Context.Roles.ToList();
+
+            UserToken t = new UserToken();
+            List<User> o = IDFManager.Context.Users
+                .Include(o => o.Apps).Include(o => o.Roles)
+                .Where(o => o.UserName.ToLower() == user.ToLower() && o.IsDeleted == false).ToList();
+            if (o == null)
+            {
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+                result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
+                return result;
+            }
+            if (o.Count == 0)
+            {
+                //throw new Exception(Messages.UserNotFound);
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+                result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
+                return result;
+            }
+            
+            //Validate password
+            if (password != Helpers.Decrypt(o[0].Password, o[0].PrivateKey))
+            {
+                //throw new Exception(Messages.IncorrectPassword);
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+                result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
+                return result;
+            }
+            
+
+            t = IDFManager.UserTokenServices.Create(o[0].Id,ipAddress);
+            //Multiple Session by IP
+            if (IDFManager.AllowUserMultipleSessions)
+            {
+                t.User.LastIPAddress = ipAddress;
+                IDFManager.Context.SaveChanges();
+            }
+            else
+            {//Validate IP Address
+                if (t.User.LastIPAddress.ToLower() != ipAddress.ToLower())
+                {// Changed IP Address
+                    List<UserToken> expiredTokens = IDFManager.Context.UserTokens.Where(o => o.IPAddress != ipAddress).ToList();
+                    IDFManager.Context.UserTokens.RemoveRange(expiredTokens);
+                    t.User.LastIPAddress = ipAddress;
+                    IDFManager.Context.SaveChanges();
+                }
+                else
+                {
+                    t.User.LastIPAddress = ipAddress;
+                    IDFManager.Context.SaveChanges();
+                }
+            }
+
+
+            result = new(t);
+            return result;
+        }
+
+
+
         #endregion
 
         #region Authenticate UserToken -1
@@ -74,6 +137,35 @@ namespace CMouss.IdentityFramework.Services
                 result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
                 return result;
             }
+
+            result.UserToken = ts[0];
+            result.SecurityValidationResult = SecurityValidationResult.Ok;
+
+            return result;
+        }
+
+        public AuthResult AuthUserToken(string token, string ipAddress)
+        {
+            AuthResult result = new();
+            bool validation = false;
+            List<UserToken> ts = IDFManager.Context.UserTokens
+                .Include(t => t.User).Include(o => o.User.Apps).Include(u => u.User.Roles).ThenInclude(r => r.Permissions)
+                .Where(o => o.Token.ToLower() == token.ToLower()).ToList();
+            if (ts is null)
+            {
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+                result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                return result;
+            }
+
+            if (ts.Count < 1)
+            {
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+                result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                return result;
+            }
+
+
 
             result.UserToken = ts[0];
             result.SecurityValidationResult = SecurityValidationResult.Ok;

@@ -37,5 +37,11 @@ namespace CMouss.IdentityFramework
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public virtual List<AppAccessPermission> AppAccessPermissions { get; set; } = new List<AppAccessPermission>();
+
+        [StringLength(16)]
+        public string LastIPAddress { get; set; }
+
+        [StringLength(1000)]
+        public string AllowedIPAddresses { get; set; }
     }
 }

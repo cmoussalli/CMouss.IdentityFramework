@@ -27,6 +27,7 @@ namespace CMouss.IdentityFramework
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public User User { get; set; }
 
-
+        [StringLength(16)]
+        public string IPAddress { get; set; }
     }
 }

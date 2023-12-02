@@ -141,7 +141,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.Update(model.UserId, model.FullName, model.Email, model.IsLocked, model.IsActive);
+                IDFManager.UserServices.Update(model.UserId, model.FullName, model.Email, model.IsLocked, model.IsActive );
                 result.ResponseStatus.SetAsSuccess("", model.UserId);
                 return Ok(result);
             }

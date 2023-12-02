@@ -16,6 +16,6 @@ namespace CMouss.IdentityFramework.API.Models
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public User User { get; set; }
 
-
+        public string IPAddress { get; set; }
     }
 }

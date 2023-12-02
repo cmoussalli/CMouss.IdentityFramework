@@ -66,6 +66,10 @@ namespace CMouss.IdentityFramework
         public bool MaintainUniqueAppTitleAcrossAllUsers { get; set; } = false;
         public LifeTime DefaultTokenLifeTime { get; set; } = new LifeTime(0, 0, 1);
         public LifeTime DefaultAppAccessLifeTime { get; set; } = new LifeTime(0, 0, 1);
+
+        public bool AllowUserMultipleSessions { get; set; } = true;
+
+
     }
 
     public static partial class IDFManager
@@ -164,6 +168,11 @@ namespace CMouss.IdentityFramework
         public static IDGeneratorLevel IDGeneratorLevel { get { return iDGeneratorLevel; } }
 
 
+        static bool allowUserMultipleSessions;
+        public static bool AllowUserMultipleSessions { get { return allowUserMultipleSessions; } }
+
+
+
         static IDFDBContext IDFDBContext;
         public static IDFDBContext Context
         {
@@ -207,6 +216,7 @@ namespace CMouss.IdentityFramework
             administratorUserName = config.AdministratorUserName;
             administratorPassword = config.AdministratorPassword;
             iDGeneratorLevel = config.IDGeneratorLevel;
+            allowUserMultipleSessions = config.AllowUserMultipleSessions;
 
             if (dBLifeCycle != DBLifeCycle.OnRequestOnly)
             {

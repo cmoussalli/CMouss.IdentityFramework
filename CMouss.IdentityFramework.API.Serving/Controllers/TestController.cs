@@ -16,7 +16,7 @@ namespace CMouss.IdentityFramework.API.Serving
         [Route(APIRoutes.Test.Echo)]
         public IActionResult Test()
         {
-            return Ok("Echo test from CMouss.IdentityFramework");
+            return Ok("Echo test from CMouss.IdentityFramework, Client IPAddress: " + Request.HttpContext.Connection.RemoteIpAddress );
         }
 
 

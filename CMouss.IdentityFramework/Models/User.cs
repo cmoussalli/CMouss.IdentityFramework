@@ -48,5 +48,11 @@ namespace CMouss.IdentityFramework
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public virtual List<App> Apps { get; set; }
+
+
+
+        [StringLength(16)]
+        public string LastIPAddress { get; set; }
+
     }
 }

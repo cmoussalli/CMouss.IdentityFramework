@@ -85,7 +85,8 @@ namespace CMouss.IdentityFramework.APIServer
                 DBLifeCycle = DBLifeCycle.Both,
                 IsActiveByDefault = true,
                 IsLockedByDefault = false,
-                DefaultTokenLifeTime = new LifeTime(30, 0, 0)
+                DefaultTokenLifeTime = new LifeTime(30, 0, 0),
+                AllowUserMultipleSessions = false
             }); 
 
             IDFDBContext db = new IDFDBContext();
