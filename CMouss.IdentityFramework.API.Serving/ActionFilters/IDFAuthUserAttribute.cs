@@ -27,8 +27,8 @@ namespace CMouss.IdentityFramework.API.Serving
             {
                 Helpers.ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
             }
-
-            AuthResult authResult = IDFManager.AuthService.AuthUserToken(userToken.ToString());
+            string ip = context.HttpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString();
+            AuthResult authResult = IDFManager.AuthService.AuthUserToken(userToken.ToString(),ip);
 
             if (authResult.SecurityValidationResult == SecurityValidationResult.Ok)
             {

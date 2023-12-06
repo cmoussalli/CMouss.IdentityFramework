@@ -20,6 +20,7 @@ namespace CMouss.IdentityFramework.API.Serving.Converters
             apiUser.IsLocked = dbUser.IsLocked;
             apiUser.IsActive = dbUser.IsActive;
             apiUser.CreateDate = dbUser.CreateDate;
+            apiUser.LastIPAddress = dbUser.LastIPAddress;
 
             if (loadApps) { apiUser.Apps = AppConverter.ToAPIAppsList(dbUser.Apps); }
             if (loadRoles) { apiUser.Roles = RoleConverter.ToAPIRolesList(dbUser.Roles,false,false); }

@@ -52,7 +52,8 @@ namespace CMouss.IdentityFramework.API.Serving
             IDFAuthResponseModels.IDFAuth result = new();
             try
             {
-                AuthResult authResult = IDFManager.AuthService.AuthUserToken(userToken);
+                string ip = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                AuthResult authResult = IDFManager.AuthService.AuthUserToken(userToken,ip);
                 result.ResponseStatus.SetAsSuccess();
                 result.AuthResult = Converters.AuthResultConverter.ToAPIAuthResult(authResult);
             }

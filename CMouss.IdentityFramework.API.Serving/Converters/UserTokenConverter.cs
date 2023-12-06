@@ -15,6 +15,7 @@ namespace CMouss.IdentityFramework.API.Serving.Converters
             APIModels.UserToken apiUserToken = new();
             apiUserToken.Token = dbUserToken.Token;
             apiUserToken.ExpireDate = dbUserToken.ExpireDate;
+            apiUserToken.IPAddress = dbUserToken.IPAddress;
 
             APIModels.User apiUser = new();
             if (dbUserToken.User is not null)
