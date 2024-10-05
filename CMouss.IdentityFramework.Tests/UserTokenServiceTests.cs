@@ -33,7 +33,7 @@ namespace CMouss.IdentityFramework.Tests
             db.Users.Add(user);
             db.SaveChanges();
 
-            IDFManager.UserTokenServices.Create(newUserId, new LifeTime(1, 0, 0));
+            IDFManager.UserTokenServices.Create(newUserId, new LifeTime(1, 0, 0),"");
 
             db = new IDFDBContext();
             UserToken t = db.UserTokens.Where(o =>

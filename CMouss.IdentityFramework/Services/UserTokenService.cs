@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework
@@ -53,7 +55,7 @@ namespace CMouss.IdentityFramework
 
             if (!IDFManager.AllowUserMultipleSessions)
             {
-                if ( lst[0].User.LastIPAddress.Contains(ipAddress))
+                if (lst[0].User.LastIPAddress.Contains(ipAddress))
                 {
                     List<UserToken> killTokens = IDFManager.Context.UserTokens.Where(o => o.UserId == lst[0].UserId && o.IPAddress.ToLower() != ipAddress.ToLower()).ToList();
                     IDFManager.Context.RemoveRange(killTokens);
@@ -98,7 +100,7 @@ namespace CMouss.IdentityFramework
 
         public UserToken Create(string userId)
         {
-            return Create(userId, IDFManager.TokenDefaultLifeTime,"");
+            return Create(userId, IDFManager.TokenDefaultLifeTime, "");
         }
         public UserToken Create(string userId, string ipAddress)
         {
@@ -108,7 +110,12 @@ namespace CMouss.IdentityFramework
         public UserToken Create(string userId, LifeTime lifeTime, string ipAddress)
         {
             UserToken o = new UserToken();
-            o.Token = Helpers.GenerateKey();
+            User user = IDFManager.Context.Users.Include("Roles").First(o => o.Id == userId);
+            if(user.IsDeleted == true) { throw new Exception("User is deleted"); }
+            if(user.IsLocked == true) { throw new Exception("User is locked"); }
+            string x = JsonSerializer.Serialize(Helpers.GenerateUserClaim(user));
+            o.Token =  Helpers.Encrypt( x, IDFManager.TokenEncryptionKey);
+
             o.ExpireDate = DateTime.Now.AddDays(lifeTime.Days).AddHours(lifeTime.Hours).AddMinutes(lifeTime.Minutes);
             o.UserId = userId;
             o.IPAddress = ipAddress;

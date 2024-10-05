@@ -7,6 +7,20 @@ using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework
 {
+
+    public enum TokenEncyptionScope
+    {
+        /// <summary>
+        /// With this scope, the token will be encrypted (and decrypted) using each user private key, this more secure option come with the cost of slower API response.
+        /// </summary>
+        UserScope = 1,
+
+        /// <summary>
+        /// With this scope, the token will be encrypted (and decrypted) using the same solution key for all users , this faster option come with the cost of less security level.
+        /// </summary>
+        SolutionScope = 2
+    }
+
     public enum DatabaseType
     {
         MSSQL = 1,
@@ -69,6 +83,8 @@ namespace CMouss.IdentityFramework
 
         public bool AllowUserMultipleSessions { get; set; } = true;
 
+        public TokenEncyptionScope TokenEncyptionScope { get; set; } = TokenEncyptionScope.SolutionScope;
+        public string TokenEncryptionKey { get; set; } = "123456";
 
     }
 
@@ -173,6 +189,17 @@ namespace CMouss.IdentityFramework
 
 
 
+
+
+        static string tokenEncryptionKey;
+        public static string TokenEncryptionKey { get { return tokenEncryptionKey; } }
+
+        static TokenEncyptionScope tokenEncyptionScope;
+        public static TokenEncyptionScope TokenEncyptionScope { get { return tokenEncyptionScope; } }
+
+
+
+
         static IDFDBContext IDFDBContext;
         public static IDFDBContext Context
         {
@@ -217,6 +244,9 @@ namespace CMouss.IdentityFramework
             administratorPassword = config.AdministratorPassword;
             iDGeneratorLevel = config.IDGeneratorLevel;
             allowUserMultipleSessions = config.AllowUserMultipleSessions;
+
+            tokenEncyptionScope = config.TokenEncyptionScope;
+            tokenEncryptionKey = config.TokenEncryptionKey;
 
             if (dBLifeCycle != DBLifeCycle.OnRequestOnly)
             {
