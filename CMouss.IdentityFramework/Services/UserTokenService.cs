@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CMouss.IdentityFramework.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,34 +13,80 @@ namespace CMouss.IdentityFramework
     public class UserTokenService
     {
 
-        public string GetUserIdUsingUsertoken(string token)
+        public string GetUserIdUsingUsertoken(string token, TokenValidationMode tokenValidationMode)
         {
-            try
+            if (tokenValidationMode == TokenValidationMode.DecryptOnly)
             {
-                UserToken tok = IDFManager.Context.UserTokens.First(o =>
-                    o.Token == token
-                    && o.ExpireDate >= DateTime.Now
-                    );
-                return tok.UserId;
+                try
+                {
+                    string decryptedText = Helpers.Decrypt(token, IDFManager.TokenEncryptionKey);
+                    UserClaim claim = JsonSerializer.Deserialize<UserClaim>(decryptedText);
+                    if(claim.TokenExpireDate < DateTime.UtcNow) { return null; }
+                    return claim.UserId;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                return null;
+
+                try
+                {
+                    UserToken tok = IDFManager.Context.UserTokens.First(o =>
+                        o.Token == token
+                        && o.ExpireDate >= DateTime.Now
+                        );
+                    return tok.UserId;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
             }
         }
 
-        public UserToken? Validate(string token)
+        public UserToken? Validate(string token, TokenValidationMode tokenValidationMode)
         {
+            if (tokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                try
+                {
+                    string decryptedText = Helpers.Decrypt(token, IDFManager.TokenEncryptionKey);
+                    UserClaim claim = JsonSerializer.Deserialize<UserClaim>(decryptedText);
+                    if (claim.TokenExpireDate < DateTime.UtcNow) { return null; }
+                    List<Role> roles = new();
+                    foreach (string roleName in claim.Roles)
+                    {
+                        roles.Add(IDFManager.Context.Roles.First(o => o.Id == roleName));
+                    }
+                    UserToken o = new UserToken();
+                    o.UserId = claim.UserId;
+                    o.User = new User() { Email = claim.EMail, FullName = claim.UserFullName, UserName = claim.UserName, Roles = roles, Id = o.UserId };
+                    
+                    return o;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
+            }
+            else
+            {
 
-            List<UserToken> lst = IDFManager.Context.UserTokens.Include(o => o.User).Where(o =>
+
+                List<UserToken> lst = IDFManager.Context.UserTokens.Include(o => o.User).Where(o =>
                 o.Token == token
                 && o.ExpireDate >= DateTime.Now
                 ).ToList();
-            if (lst.Count == 0)
-            {
-                return null;
+                if (lst.Count == 0)
+                {
+                    return null;
+                }
+                return lst[0];
+
             }
-            return lst[0];
         }
 
         public UserToken? Validate(string token, string ipAddress)
@@ -111,10 +158,10 @@ namespace CMouss.IdentityFramework
         {
             UserToken o = new UserToken();
             User user = IDFManager.Context.Users.Include("Roles").First(o => o.Id == userId);
-            if(user.IsDeleted == true) { throw new Exception("User is deleted"); }
-            if(user.IsLocked == true) { throw new Exception("User is locked"); }
+            if (user.IsDeleted == true) { throw new Exception("User is deleted"); }
+            if (user.IsLocked == true) { throw new Exception("User is locked"); }
             string x = JsonSerializer.Serialize(Helpers.GenerateUserClaim(user));
-            o.Token =  Helpers.Encrypt( x, IDFManager.TokenEncryptionKey);
+            o.Token = Helpers.Encrypt(x, IDFManager.TokenEncryptionKey);
 
             o.ExpireDate = DateTime.Now.AddDays(lifeTime.Days).AddHours(lifeTime.Hours).AddMinutes(lifeTime.Minutes);
             o.UserId = userId;

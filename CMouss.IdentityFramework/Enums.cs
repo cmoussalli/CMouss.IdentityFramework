@@ -6,6 +6,19 @@ using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework
 {
+
+    /// <summary>
+    /// Set The validation mode to DecryptOnly if you want to validate the token only by decrypting it, or decrypt and validate the token using database
+    /// </summary>
+    public enum TokenValidationMode
+    {
+        
+        DecryptOnly,
+        DecryptAndValidate
+    }
+
+
+
     /// <summary>
     /// Use Tenant mode only if you want to validate the authenticated app's both User permission and App Permission
     /// </summary>
