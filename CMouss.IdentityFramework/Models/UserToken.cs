@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework
 {
-    public class UserToken
+    public partial class UserToken
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

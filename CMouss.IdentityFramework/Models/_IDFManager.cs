@@ -73,6 +73,11 @@ namespace CMouss.IdentityFramework
 
         public string TokenEncryptionKey { get; set; } = "123456";
 
+        public TokenValidationMode TokenValidationMode { get; set; } = TokenValidationMode.DecryptOnly;
+
+
+
+
     }
 
     public static partial class IDFManager

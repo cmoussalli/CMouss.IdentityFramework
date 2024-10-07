@@ -86,7 +86,8 @@ namespace CMouss.IdentityFramework.APIServer
                 IsActiveByDefault = true,
                 IsLockedByDefault = false,
                 DefaultTokenLifeTime = new LifeTime(30, 0, 0),
-                AllowUserMultipleSessions = false
+                AllowUserMultipleSessions = false,
+                TokenEncryptionKey = "123456"
             }); 
 
             IDFDBContext db = new IDFDBContext();
