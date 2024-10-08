@@ -6,6 +6,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Security.Claims;
 
 namespace CMouss.IdentityFramework
 {
@@ -182,7 +185,22 @@ namespace CMouss.IdentityFramework
             return result;
         }
 
+        public static UserClaim DecryptUserToken(string encryptedToken)
+        {
+            UserClaim result = new();
+            try
+            {
+                string str = Decrypt(encryptedToken, IDFManager.TokenEncryptionKey);
+                result = JsonSerializer.Deserialize<UserClaim>(str);
+                if (result.TokenExpireDate < DateTime.UtcNow) { throw new Exception ("Token has been Expired"); }
+            }
+            catch(Exception ex)
+            {
+                throw new Exception("Invalid Token");
+            }
 
+            return result;
+        }
 
     }
 }

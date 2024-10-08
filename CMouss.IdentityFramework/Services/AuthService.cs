@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace CMouss.IdentityFramework.Services
 {
@@ -73,7 +74,7 @@ namespace CMouss.IdentityFramework.Services
                 result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
                 return result;
             }
-            
+
             //Validate password
             if (password != Helpers.Decrypt(o[0].Password, o[0].PrivateKey))
             {
@@ -82,9 +83,9 @@ namespace CMouss.IdentityFramework.Services
                 result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
                 return result;
             }
-            
 
-            t = IDFManager.UserTokenServices.Create(o[0].Id,ipAddress);
+
+            t = IDFManager.UserTokenServices.Create(o[0].Id, ipAddress);
             //Multiple Session by IP
             if (IDFManager.AllowUserMultipleSessions)
             {
@@ -117,29 +118,38 @@ namespace CMouss.IdentityFramework.Services
         #endregion
 
         #region Authenticate UserToken -1
-        public AuthResult AuthUserToken(string token)
+        public AuthResult AuthUserToken(string token, TokenValidationMode? tokenValidationMode = TokenValidationMode.DecryptOnly)
         {
             AuthResult result = new();
             bool validation = false;
-            List<UserToken> ts = IDFManager.Context.UserTokens
-                .Include(t => t.User).Include(o => o.User.Apps).Include(u => u.User.Roles).ThenInclude(r => r.Permissions)
-                .Where(o => o.Token.ToLower() == token.ToLower()).ToList();
-            if (ts is null)
-            {
-                result.AuthenticationMode = IDFAuthenticationMode.User;
-                result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
-                return result;
-            }
 
-            if (ts.Count < 1)
+            if (IDFManager.TokenValidationMode == TokenValidationMode.DecryptOnly)
             {
-                result.AuthenticationMode = IDFAuthenticationMode.User;
-                result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
-                return result;
+                 Helpers.Decrypt(token, IDFManager.TokenEncryptionKey);
+                
             }
+            else
+            {
+                List<UserToken> ts = IDFManager.Context.UserTokens
+                    .Include(t => t.User).Include(o => o.User.Apps).Include(u => u.User.Roles).ThenInclude(r => r.Permissions)
+                    .Where(o => o.Token.ToLower() == token.ToLower()).ToList();
+                if (ts is null)
+                {
+                    result.AuthenticationMode = IDFAuthenticationMode.User;
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
 
-            result.UserToken = ts[0];
-            result.SecurityValidationResult = SecurityValidationResult.Ok;
+                if (ts.Count < 1)
+                {
+                    result.AuthenticationMode = IDFAuthenticationMode.User;
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+
+                result.UserToken = ts[0];
+                result.SecurityValidationResult = SecurityValidationResult.Ok;
+            }
 
             return result;
         }
@@ -186,7 +196,7 @@ namespace CMouss.IdentityFramework.Services
         public AuthResult AuthUserTokenWithPermission(string token, EntityPermission entityPermission)
         {
             AuthResult result = new();
-                result.AuthenticationMode = IDFAuthenticationMode.User;
+            result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
             List<UserToken> ts = IDFManager.Context.UserTokens
                 .Include(t => t.User).ThenInclude(u => u.Roles).ThenInclude(r => r.Permissions)
@@ -263,7 +273,7 @@ namespace CMouss.IdentityFramework.Services
         public AuthResult AuthUserTokenWithRole(string token, string roleId)
         {
             AuthResult result = new();
-                result.AuthenticationMode = IDFAuthenticationMode.User;
+            result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
             UserToken userToken = IDFManager.UserTokenServices.Validate(token);
             if (userToken is null)
@@ -295,7 +305,7 @@ namespace CMouss.IdentityFramework.Services
         public AuthResult AuthUserTokenWithRoles(string token, List<string> roleIds)
         {
             AuthResult result = new();
-                result.AuthenticationMode = IDFAuthenticationMode.User;
+            result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
             UserToken userToken = IDFManager.UserTokenServices.Validate(token);
             if (userToken is null)
@@ -333,7 +343,7 @@ namespace CMouss.IdentityFramework.Services
         public AuthResult AuthUserTokenWithRolesOrPermission(string token, List<string> roleIds, EntityPermission entityPermission)
         {
             AuthResult result = new();
-                result.AuthenticationMode = IDFAuthenticationMode.User;
+            result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
             List<UserToken> ts = IDFManager.Context.UserTokens.Where(o => o.Token.ToLower() == token.ToLower()).ToList();
             if (ts is null)
