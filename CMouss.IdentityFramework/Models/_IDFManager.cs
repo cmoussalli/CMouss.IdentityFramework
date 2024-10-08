@@ -186,8 +186,8 @@ namespace CMouss.IdentityFramework
         static string tokenEncryptionKey;
         public static string TokenEncryptionKey { get { return tokenEncryptionKey; } }
 
-        static string tokenValidationMode;
-        public static string TokenValidationMode { get { return tokenValidationMode; } }
+        static TokenValidationMode tokenValidationMode;
+        public static TokenValidationMode TokenValidationMode { get { return tokenValidationMode; } }
 
 
         static IDFDBContext IDFDBContext;
