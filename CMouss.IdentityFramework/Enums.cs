@@ -12,7 +12,7 @@ namespace CMouss.IdentityFramework
     /// </summary>
     public enum TokenValidationMode
     {
-        
+        UseDefault,
         DecryptOnly,
         DecryptAndValidate
     }

@@ -220,6 +220,12 @@ namespace CMouss.IdentityFramework
 
         public static void Configure(IDFManagerConfig config)
         {
+            //Validate Configs
+            if (tokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                throw new Exception("Use Default is not allowed for IDFManagerConfig");
+            }
+
             databaseType = config.DatabaseType;
             connectionString = config.DBConnectionString;
             defaultListPageSize = config.DefaultListPageSize;
