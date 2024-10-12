@@ -64,17 +64,21 @@ namespace CMouss.IdentityFramework.Services
             }
             else
             {//Validate IP Address
-                if (t.User.LastIPAddress.ToLower() != ipAddress.ToLower())
-                {// Changed IP Address
-                    List<UserToken> expiredTokens = IDFManager.Context.UserTokens.Where(o => o.IPAddress != ipAddress).ToList();
-                    IDFManager.Context.UserTokens.RemoveRange(expiredTokens);
-                    t.User.LastIPAddress = ipAddress;
-                    IDFManager.Context.SaveChanges();
-                }
-                else
+                if (t.User.LastIPAddress is not null)
                 {
-                    t.User.LastIPAddress = ipAddress;
-                    IDFManager.Context.SaveChanges();
+
+                    if (t.User.LastIPAddress.ToLower() != ipAddress.ToLower())
+                    {// Changed IP Address
+                        List<UserToken> expiredTokens = IDFManager.Context.UserTokens.Where(o => o.IPAddress != ipAddress).ToList();
+                        IDFManager.Context.UserTokens.RemoveRange(expiredTokens);
+                        t.User.LastIPAddress = ipAddress;
+                        IDFManager.Context.SaveChanges();
+                    }
+                    else
+                    {
+                        t.User.LastIPAddress = ipAddress;
+                        IDFManager.Context.SaveChanges();
+                    }
                 }
             }
 
@@ -105,8 +109,45 @@ namespace CMouss.IdentityFramework.Services
             {
                 UserClaim claim = Helpers.DecryptUserToken(token);
                 result.AuthenticationMode = IDFAuthenticationMode.User;
-                result.UserToken = new UserToken() { Token = token, IPAddress = "", UserId = claim.UserId, ExpireDate = claim.TokenExpireDate,  };
                 result.SecurityValidationResult = SecurityValidationResult.Ok;
+
+                result.UserToken = new();
+                result.UserToken.User = new();
+                result.UserToken.UserId = claim.UserId;
+                result.UserToken.User.Id = claim.UserId;
+                result.UserToken.User.UserName = claim.UserName;
+                result.UserToken.User.FullName = claim.UserFullName;
+                result.UserToken.User.Email = claim.EMail;
+                result.UserToken.ExpireDate = claim.TokenExpireDate;
+
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+
+                List<Role> roles = new();
+                foreach (string r in claim.Roles)
+                {
+                    Role r0 = Storage.Roles.FirstOrDefault(rl => rl.Id == r);
+                    if (r0 is not null)
+                    {
+
+                        if (r0.Id == r)
+                        {
+                            roles.Add(r0);
+                        }
+                    }
+                }
+
+
+
+
+
+
+                result.UserToken.User.Roles = roles;
+
+                if (string.IsNullOrEmpty(ipAddress))
+                {
+                    result.UserToken.IPAddress = ipAddress;
+                }
+
 
             }
             else
@@ -232,7 +273,7 @@ namespace CMouss.IdentityFramework.Services
             AuthResult result = new();
             result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token, IDFManager.TokenValidationMode);
+            UserToken userToken = IDFManager.UserTokenServices.Validate(token, IDFManager.TokenValidationMode, null);
             if (userToken is null)
             {
                 result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
@@ -264,7 +305,7 @@ namespace CMouss.IdentityFramework.Services
             AuthResult result = new();
             result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
+            UserToken userToken = IDFManager.UserTokenServices.Validate(token, TokenValidationMode.UseDefault, "");
             if (userToken is null)
             {
                 result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;

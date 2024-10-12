@@ -21,7 +21,8 @@ namespace CMouss.IdentityFramework
 
         public List<Role> GetAll()
         {
-            return IDFManager.Context.Roles.ToList();
+            Storage.Roles = IDFManager.Context.Roles.ToList();
+            return Storage.Roles;
         }
 
 

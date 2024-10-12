@@ -72,7 +72,7 @@ namespace CMouss.IdentityFramework.Tests
             db.UserTokens.Add(token);
             db.SaveChanges();
 
-            UserToken verify = IDFManager.UserTokenServices.Validate(newToken);
+            UserToken verify = IDFManager.UserTokenServices.Validate(newToken,TokenValidationMode.UseDefault, "");
 
             Assert.IsNotNull(verify);
         }
@@ -103,7 +103,7 @@ namespace CMouss.IdentityFramework.Tests
             db.UserTokens.Add(token);
             db.SaveChanges();
 
-            UserToken verify = IDFManager.UserTokenServices.Validate(newToken);
+            UserToken verify = IDFManager.UserTokenServices.Validate(newToken,TokenValidationMode.UseDefault,"");
 
             Assert.IsNull(verify);
         }

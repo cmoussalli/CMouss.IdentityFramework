@@ -27,9 +27,9 @@ namespace CMouss.IdentityFramework
             {
                 throw new Exception("level must be higher than 0");
             }
-            while(i < level)
+            while (i < level)
             {
-                result = result + Guid.NewGuid().ToString().Replace(@"{", "").Replace(@"}", "").Replace(@"-","");
+                result = result + Guid.NewGuid().ToString().Replace(@"{", "").Replace(@"}", "").Replace(@"-", "");
                 i = i + 1;
             }
 
@@ -192,15 +192,17 @@ namespace CMouss.IdentityFramework
             {
                 string str = Decrypt(encryptedToken, IDFManager.TokenEncryptionKey);
                 result = JsonSerializer.Deserialize<UserClaim>(str);
-                if (result.TokenExpireDate < DateTime.UtcNow) { throw new Exception ("Token has been Expired"); }
+                if (result.TokenExpireDate < DateTime.UtcNow) { throw new Exception("Token has been Expired"); }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception("Invalid Token");
             }
 
             return result;
         }
+
+
 
 
     }

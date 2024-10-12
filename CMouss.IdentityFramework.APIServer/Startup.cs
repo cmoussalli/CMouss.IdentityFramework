@@ -42,7 +42,7 @@ namespace CMouss.IdentityFramework.APIServer
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -87,7 +87,8 @@ namespace CMouss.IdentityFramework.APIServer
                 IsLockedByDefault = false,
                 DefaultTokenLifeTime = new LifeTime(30, 0, 0),
                 AllowUserMultipleSessions = false,
-                TokenEncryptionKey = "123456"
+                TokenEncryptionKey = "123456",
+                TokenValidationMode = TokenValidationMode.DecryptOnly,
             }); 
 
             IDFDBContext db = new IDFDBContext();

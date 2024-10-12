@@ -47,7 +47,7 @@ namespace CMouss.IdentityFramework
             }
         }
 
-        public UserToken? Validate(string token, TokenValidationMode tokenValidationMode)
+        public UserToken? Validate(string token, TokenValidationMode tokenValidationMode, string? ipAddress)
         {
             if (tokenValidationMode == TokenValidationMode.DecryptOnly)
             {

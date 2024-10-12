@@ -431,80 +431,80 @@ namespace CMouss.IdentityFramework
 
 
 
-        #region Validate UserToken Role or Permission
-        public bool ValidateTokenRoleOrPermission(string token, string rolesId, string entity, string permissionTypeId)
-        {
-            bool result = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
-            if (userToken == null)
-            {
-                throw new Exception(Messages.IncorrectToken);
-            }
-            if (ValidateUserRole(userToken.UserId, rolesId))
-            {
-                return true;
-            }
-            if (ValidateUserPermission(userToken.UserId, entity, permissionTypeId))
-            {
-                return true;
-            }
-            return result;
-        }
-        public bool ValidateTokenRoleOrPermission(string token, List<string> rolesIds, string entity, string permissionTypeId)
-        {
-            bool result = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
-            if (userToken == null)
-            {
-                throw new Exception(Messages.IncorrectToken);
-            }
-            if (ValidateUserRole(userToken.UserId, rolesIds))
-            {
-                return true;
-            }
-            if (ValidateUserPermission(userToken.UserId, entity, permissionTypeId))
-            {
-                return true;
-            }
-            return result;
-        }
-        public bool ValidateTokenRoleOrPermission(string token, string rolesId, string entity, List<string> permissionTypeIds)
-        {
-            bool result = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
-            if (userToken == null)
-            {
-                throw new Exception(Messages.IncorrectToken);
-            }
-            if (ValidateUserRole(userToken.UserId, rolesId))
-            {
-                return true;
-            }
-            if (ValidateUserPermission(userToken.UserId, entity, permissionTypeIds))
-            {
-                return true;
-            }
-            return result;
-        }
-        public bool ValidateTokenRoleOrPermission(string token, List<string> rolesIds, string entity, List<string> permissionTypeIds)
-        {
-            bool result = false;
-            UserToken userToken = IDFManager.UserTokenServices.Validate(token);
-            if (userToken == null)
-            {
-                throw new Exception(Messages.IncorrectToken);
-            }
-            if (ValidateUserRole(userToken.UserId, rolesIds))
-            {
-                return true;
-            }
-            if (ValidateUserPermission(userToken.UserId, entity, permissionTypeIds))
-            {
-                return true;
-            }
-            return result;
-        }
-        #endregion
+        //#region Validate UserToken Role or Permission
+        //public bool ValidateTokenRoleOrPermission(string token, string rolesId, string entity, string permissionTypeId)
+        //{
+        //    bool result = false;
+        //    UserToken userToken = IDFManager.UserTokenServices.Validate(token,);
+        //    if (userToken == null)
+        //    {
+        //        throw new Exception(Messages.IncorrectToken);
+        //    }
+        //    if (ValidateUserRole(userToken.UserId, rolesId))
+        //    {
+        //        return true;
+        //    }
+        //    if (ValidateUserPermission(userToken.UserId, entity, permissionTypeId))
+        //    {
+        //        return true;
+        //    }
+        //    return result;
+        //}
+        //public bool ValidateTokenRoleOrPermission(string token, List<string> rolesIds, string entity, string permissionTypeId)
+        //{
+        //    bool result = false;
+        //    UserToken userToken = IDFManager.UserTokenServices.Validate(token);
+        //    if (userToken == null)
+        //    {
+        //        throw new Exception(Messages.IncorrectToken);
+        //    }
+        //    if (ValidateUserRole(userToken.UserId, rolesIds))
+        //    {
+        //        return true;
+        //    }
+        //    if (ValidateUserPermission(userToken.UserId, entity, permissionTypeId))
+        //    {
+        //        return true;
+        //    }
+        //    return result;
+        //}
+        //public bool ValidateTokenRoleOrPermission(string token, string rolesId, string entity, List<string> permissionTypeIds)
+        //{
+        //    bool result = false;
+        //    UserToken userToken = IDFManager.UserTokenServices.Validate(token);
+        //    if (userToken == null)
+        //    {
+        //        throw new Exception(Messages.IncorrectToken);
+        //    }
+        //    if (ValidateUserRole(userToken.UserId, rolesId))
+        //    {
+        //        return true;
+        //    }
+        //    if (ValidateUserPermission(userToken.UserId, entity, permissionTypeIds))
+        //    {
+        //        return true;
+        //    }
+        //    return result;
+        //}
+        //public bool ValidateTokenRoleOrPermission(string token, List<string> rolesIds, string entity, List<string> permissionTypeIds)
+        //{
+        //    bool result = false;
+        //    UserToken userToken = IDFManager.UserTokenServices.Validate(token);
+        //    if (userToken == null)
+        //    {
+        //        throw new Exception(Messages.IncorrectToken);
+        //    }
+        //    if (ValidateUserRole(userToken.UserId, rolesIds))
+        //    {
+        //        return true;
+        //    }
+        //    if (ValidateUserPermission(userToken.UserId, entity, permissionTypeIds))
+        //    {
+        //        return true;
+        //    }
+        //    return result;
+        //}
+        //#endregion
 
 
 
