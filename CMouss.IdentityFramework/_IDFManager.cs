@@ -224,7 +224,7 @@ namespace CMouss.IdentityFramework
 
         #endregion
 
-        public static List<UserSession> UserSessions { get; set; }
+        public static List<UserSession> UserSessions { get; set; } = new();
 
         #region Services
         public static RoleService RoleServices = new RoleService();

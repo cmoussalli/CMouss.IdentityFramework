@@ -14,7 +14,7 @@ namespace CMouss.IdentityFramework
 
             public static void AddOrUpdate(string userId, string? ipAddress)
             {
-                UserSession session = IDFManager.UserSessions.Find(o => o.UserId.ToLower() == userId.ToLower());
+                UserSession session = IDFManager.UserSessions.FirstOrDefault(o => o.UserId.ToLower() == userId.ToLower());
                 if (session is null //New Session 
                     || session is not null && IDFManager.AllowUserMultipleSessions) //Existing Session but Multiple Session is Allowed)
                 {

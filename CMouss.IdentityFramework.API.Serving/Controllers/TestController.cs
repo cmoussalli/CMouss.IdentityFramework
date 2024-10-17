@@ -24,36 +24,36 @@ namespace CMouss.IdentityFramework.API.Serving
 
 
 
-        [HttpPost]
-        [Route("api/Identity/test/secureEcho")]
-        public IActionResult UserToken(
-             [FromHeader] string userToken
-        )
-        {
-            return Ok(CMouss.IdentityFramework.Helpers.Decrypt(userToken, IDFManager.TokenEncryptionKey));
+        //        [HttpPost]
+        //        [Route("api/Identity/test/secureEcho")]
+        //        public IActionResult UserToken(
+        //             [FromHeader] string userToken
+        //        )
+        //        {
+        //            return Ok(CMouss.IdentityFramework.Helpers.Decrypt(userToken, IDFManager.TokenEncryptionKey));
 
-        }
+        //        }
 
-        [HttpPost]
-        [Route("api/Identity/test/secureEcho1")]
-        public IActionResult secureEcho1(
-             [FromHeader] string userToken
-        )
-        {
-            string x = "{\"UserId\":\"81e505f5ff6a497c908db6f1928d9722\",\"UserName\":\"Admin\",\"UserFullName\":\"Admin\",\"EMail\":\"Admin@mail.com\",\"TokenCreateDate\":\"2024-10-05T18:43:52.5662851Z\",\"TokenExpireDate\":\"2024-11-04T18:43:52.5663339Z\",\"Roles\":[\"Administrators\"]}";
+        //        [HttpPost]
+        //        [Route("api/Identity/test/secureEcho1")]
+        //        public IActionResult secureEcho1(
+        //             [FromHeader] string userToken
+        //        )
+        //        {
+        //            string x = "{\"UserId\":\"81e505f5ff6a497c908db6f1928d9722\",\"UserName\":\"Admin\",\"UserFullName\":\"Admin\",\"EMail\":\"Admin@mail.com\",\"TokenCreateDate\":\"2024-10-05T18:43:52.5662851Z\",\"TokenExpireDate\":\"2024-11-04T18:43:52.5663339Z\",\"Roles\":[\"Administrators\"]}";
 
-            return Ok(Encrypt(x, IDFManager.TokenEncryptionKey));
-        }
+        //            return Ok(Encrypt(x, IDFManager.TokenEncryptionKey));
+        //        }
 
-        [HttpPost]
-        [Route("api/Identity/test/secureEcho2")]
-        public IActionResult secureEcho2(
-     [FromHeader] string userToken
-)
-        {
-            string x = userToken;
-            return Ok(Decrypt(x, "85947b8eb85e4538a89bf693736184c35b10c09fefcb4fa8b50f58a1afd169a548127574e79e4d43a59e54b6fb5b16f3"));
-        }
+        //        [HttpPost]
+        //        [Route("api/Identity/test/secureEcho2")]
+        //        public IActionResult secureEcho2(
+        //     [FromHeader] string userToken
+        //)
+        //        {
+        //            string x = userToken;
+        //            return Ok(Decrypt(x, "85947b8eb85e4538a89bf693736184c35b10c09fefcb4fa8b50f58a1afd169a548127574e79e4d43a59e54b6fb5b16f3"));
+        //        }
 
 
         public static string Encrypt(string plainText, string privateKey)

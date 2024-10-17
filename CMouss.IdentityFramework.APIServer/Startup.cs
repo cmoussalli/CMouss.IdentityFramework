@@ -56,15 +56,6 @@ namespace CMouss.IdentityFramework.APIServer
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            //IDFManager.Configure(new IDFManagerConfig
-            //{
-            //    DatabaseType = DatabaseType.MSSQL,
-            //    DBConnectionString = "Server=NUC;Database=ProjectBravos;User Id=sa;Password=SMedi@22222;",
-            //    DefaultListPageSize = 25,
-            //    DBLifeCycle = DBLifeCycle.Both,
-            //    IsActiveByDefault = true,
-            //    IsLockedByDefault = false
-            //});
 
             string filepath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\mydb.db";
             if (System.IO.File.Exists(filepath))

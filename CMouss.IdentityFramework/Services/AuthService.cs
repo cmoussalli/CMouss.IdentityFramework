@@ -112,7 +112,7 @@ namespace CMouss.IdentityFramework
                 {
                     UserClaim claim = Helpers.DecryptUserToken(token);
 
-                    result.SecurityValidationResult = SecurityValidationResult.Ok;
+                    result = claim.ToAuthResult();
                 }
                 catch (Exception ex)
                 {
