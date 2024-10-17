@@ -17,5 +17,9 @@ namespace CMouss.IdentityFramework
         public static List<AttributeType> AttributeTypes { get; set; }
 
 
+
+
+        //public static List<UserSession> Sessions { get; set; } = new();
+
     }
 }

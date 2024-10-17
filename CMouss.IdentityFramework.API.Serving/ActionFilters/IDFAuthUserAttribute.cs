@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CMouss.IdentityFramework.API.Models;
-using CMouss.IdentityFramework.Services;
+
 using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+using CMouss.IdentityFramework;
+using CMouss.IdentityFramework.API.Models;
 
 namespace CMouss.IdentityFramework.API.Serving
 {

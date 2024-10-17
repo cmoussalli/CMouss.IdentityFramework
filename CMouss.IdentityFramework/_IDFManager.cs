@@ -1,4 +1,4 @@
-﻿using CMouss.IdentityFramework.Services;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +8,18 @@ using System.Threading.Tasks;
 namespace CMouss.IdentityFramework
 {
 
+    #region IDFManager Models & Enums
+
+    
+    public class UserSession
+    {
+        public string UserId { get; set; }
+        public DateTime CreateDate { get; set; }
+        public DateTime ExpireDate { get; set; }
+        public string IPAddress { get; set; }
+        public DateTime LastConnection { get; set; }
+
+    }
 
     public enum DatabaseType
     {
@@ -50,7 +62,14 @@ namespace CMouss.IdentityFramework
             Hours = hours;
             Minutes = minutes;
         }
+
+        public TimeSpan ToTimeSpan()
+        {
+            return new TimeSpan(Days, Hours, Minutes, 0);
+        }
     }
+
+    #endregion
 
     public partial class IDFManagerConfig
     {
@@ -205,6 +224,8 @@ namespace CMouss.IdentityFramework
 
         #endregion
 
+        public static List<UserSession> UserSessions { get; set; }
+
         #region Services
         public static RoleService RoleServices = new RoleService();
         public static UserService UserServices = new UserService();
@@ -220,7 +241,15 @@ namespace CMouss.IdentityFramework
 
         public static void Configure(IDFManagerConfig config)
         {
+            if (config.TokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                throw new Exception("TokenValidationMode is not set");
+            }
 
+            if(config.AllowUserMultipleSessions == false && TokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                throw new Exception("You can't set AllowUserMultipleSessions to false when TokenValidationMode is set to DecryptOnly");
+            }
 
             databaseType = config.DatabaseType;
             connectionString = config.DBConnectionString;
@@ -246,6 +275,7 @@ namespace CMouss.IdentityFramework
                 IDFDBContext = new IDFDBContext();
 
             }
+
 
             //////Add Default Records
             ////Create Administrator Role

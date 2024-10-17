@@ -15,13 +15,17 @@ namespace CMouss.IdentityFramework
 
         public string GetUserIdUsingUsertoken(string token, TokenValidationMode tokenValidationMode)
         {
+
+            if (tokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                tokenValidationMode = IDFManager.TokenValidationMode;
+            }
             if (tokenValidationMode == TokenValidationMode.DecryptOnly)
             {
                 try
                 {
-                    string decryptedText = Helpers.Decrypt(token, IDFManager.TokenEncryptionKey);
-                    UserClaim claim = JsonSerializer.Deserialize<UserClaim>(decryptedText);
-                    if(claim.TokenExpireDate < DateTime.UtcNow) { return null; }
+                    UserClaim claim = Helpers.DecryptUserToken(token);
+                    if (claim.TokenExpireDate < DateTime.UtcNow) { return null; }
                     return claim.UserId;
                 }
                 catch (Exception ex)
@@ -47,25 +51,30 @@ namespace CMouss.IdentityFramework
             }
         }
 
+
+        public UserToken? Validate(string token, TokenValidationMode tokenValidationMode)
+        {
+            return Validate(token, tokenValidationMode, null);
+        }
+
         public UserToken? Validate(string token, TokenValidationMode tokenValidationMode, string? ipAddress)
         {
+
+            UserToken result = new();
+            if (tokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                tokenValidationMode = TokenValidationMode.DecryptOnly;
+            }
             if (tokenValidationMode == TokenValidationMode.DecryptOnly)
             {
                 try
                 {
-                    string decryptedText = Helpers.Decrypt(token, IDFManager.TokenEncryptionKey);
-                    UserClaim claim = JsonSerializer.Deserialize<UserClaim>(decryptedText);
-                    if (claim.TokenExpireDate < DateTime.UtcNow) { return null; }
-                    List<Role> roles = new();
-                    foreach (string roleName in claim.Roles)
-                    {
-                        roles.Add(IDFManager.Context.Roles.First(o => o.Id == roleName));
-                    }
+                    UserClaim claim = Helpers.DecryptUserToken(token);
                     UserToken o = new UserToken();
                     o.UserId = claim.UserId;
-                    o.User = new User() { Email = claim.EMail, FullName = claim.UserFullName, UserName = claim.UserName, Roles = roles, Id = o.UserId };
-                    
-                    return o;
+                    o.User = new User() { Email = claim.EMail, FullName = claim.UserFullName, UserName = claim.UserName, Roles = Helpers.GetUserClaimRoles(claim), Id = o.UserId, LastIPAddress = claim.IPAddress };
+
+                    result = o;
                 }
                 catch (Exception ex)
                 {
@@ -74,8 +83,6 @@ namespace CMouss.IdentityFramework
             }
             else
             {
-
-
                 List<UserToken> lst = IDFManager.Context.UserTokens.Include(o => o.User).Where(o =>
                 o.Token == token
                 && o.ExpireDate >= DateTime.Now
@@ -84,52 +91,38 @@ namespace CMouss.IdentityFramework
                 {
                     return null;
                 }
-                return lst[0];
+                result = lst[0];
 
-            }
-        }
 
-        public UserToken? Validate(string token, string ipAddress)
-        {
-            List<UserToken> lst = IDFManager.Context.UserTokens.Include(o => o.User).Where(o =>
-                o.Token == token
-                && o.ExpireDate >= DateTime.Now
-                ).ToList();
-            if (lst.Count == 0)
-            {
-                return null;
-            }
-
-            if (!IDFManager.AllowUserMultipleSessions)
-            {
-                if (lst[0].User.LastIPAddress.Contains(ipAddress))
+                if (IDFManager.AllowUserMultipleSessions)
                 {
-                    List<UserToken> killTokens = IDFManager.Context.UserTokens.Where(o => o.UserId == lst[0].UserId && o.IPAddress.ToLower() != ipAddress.ToLower()).ToList();
-                    IDFManager.Context.RemoveRange(killTokens);
-                    lst[0].User.LastIPAddress = ipAddress;
-                    IDFManager.Context.SaveChanges();
+                    if (!lst[0].User.LastIPAddress.Contains(ipAddress))
+                    {
+                        lst[0].User.LastIPAddress = ipAddress;
+                        IDFManager.Context.SaveChanges();
+                    }
+
                 }
                 else
                 {
-                    return null;
+                    if (!lst[0].User.LastIPAddress.Contains(ipAddress))
+                    {
+                        List<UserToken> killTokens = IDFManager.Context.UserTokens.Where(o => o.UserId == lst[0].UserId && o.IPAddress.ToLower() != ipAddress.ToLower()).ToList();
+                        IDFManager.Context.RemoveRange(killTokens);
+                        lst[0].User.LastIPAddress = ipAddress;
+                        IDFManager.Context.SaveChanges();
+                    }
+                   
                 }
-            }
-            else
-            {
-                if (lst[0].User.LastIPAddress.Contains(ipAddress))
-                {
-                    lst[0].User.LastIPAddress = ipAddress;
-                    IDFManager.Context.SaveChanges();
-                }
-                else
-                {
-                    return null;
-                }
+
+
             }
 
 
-            return lst[0];
+            return result;
         }
+
+
 
 
 

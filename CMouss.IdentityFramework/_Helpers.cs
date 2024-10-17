@@ -181,7 +181,7 @@ namespace CMouss.IdentityFramework
             result.TokenCreateDate = DateTime.UtcNow;
             result.TokenExpireDate = DateTime.UtcNow.AddDays(IDFManager.TokenDefaultLifeTime.Days).AddHours(IDFManager.TokenDefaultLifeTime.Hours).AddMinutes(IDFManager.TokenDefaultLifeTime.Minutes);
             result.Roles = user.Roles.Select(o => o.Id).ToList();
-
+            result.IPAddress = user.LastIPAddress;
             return result;
         }
 
@@ -202,7 +202,23 @@ namespace CMouss.IdentityFramework
             return result;
         }
 
+        public static List<Role> GetUserClaimRoles(UserClaim claim)
+        {
+            List<Role> roles = new();
+            foreach (string r in claim.Roles)
+            {
+                Role r0 = Storage.Roles.FirstOrDefault(rl => rl.Id == r);
+                if (r0 is not null)
+                {
 
+                    if (r0.Id == r)
+                    {
+                        roles.Add(r0);
+                    }
+                }
+            }
+            return roles;
+        }
 
 
     }
