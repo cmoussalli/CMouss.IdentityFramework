@@ -155,6 +155,168 @@ namespace CMouss.IdentityFramework
 
 
 
+        #region Authenticate UserToken Role(s) -2
+
+        /// <summary>
+        /// Authenticate using User info only (UserToken). App authentication is not supported.
+        /// Authorization is App based, multiple App is not supported with this function.
+        /// </summary>
+        /// <param name="token">UserToken for Authentication.</param>
+        /// <param name="roleId">The Role which user should have access to.</param>
+
+        /// <returns>Authentication & Authorization result</returns>
+        /// <exception cref="InvalidTokenException"></exception>
+        public AuthResult AuthUserTokenWithRole(string token, string roleId)
+        {
+            return AuthUserTokenWithRole(token, roleId);
+        }
+
+
+        /// <summary>
+        /// Authenticate using User info only (UserToken). App authentication is not supported.
+        /// Authorization is App based, multiple App is not supported with this function.
+        /// </summary>
+        /// <param name="token">UserToken for Authentication.</param>
+        /// <param name="roleId">The Role which user should have access to.</param>
+        /// <param name="tokenValidationMode">Set the validation mode to DecryptOnly if you want to validate the token only by decrypting it, or decrypt and validate the token using database</param>"
+        /// <returns>Authentication & Authorization result</returns>
+        /// <exception cref="InvalidTokenException"></exception>
+        public AuthResult AuthUserTokenWithRole(string token, string roleId, TokenValidationMode tokenValidationMode)
+        {
+            AuthResult result = new();
+            result.AuthenticationMode = IDFAuthenticationMode.User;
+            bool validation = false;
+
+            if (tokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                tokenValidationMode = IDFManager.TokenValidationMode;
+            }
+
+            if (tokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                try
+                {
+                    UserClaim claim = Helpers.DecryptUserToken(token);
+                    List<Role> roles = Storage.Roles.Where(o => o.Id.ToLower() == roleId.ToLower()).ToList();
+                    if (roles.Count == 0)
+                    {
+                        result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                        return result;
+                    }
+                    result = claim.ToAuthResult();
+                }
+                catch (Exception ex)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+            }
+            else
+            {
+
+
+                UserToken userToken = IDFManager.UserTokenServices.Validate(token, IDFManager.TokenValidationMode, null);
+                if (userToken is null)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+
+                result.UserToken = userToken;
+                validation = IDFManager.Context.Roles.Include(r => r.Users).Any(o => o.Id == roleId && o.Users.Any(u => u.Id == userToken.UserId));
+
+                if (!validation)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
+                    return result;
+                }
+
+            }
+            result.SecurityValidationResult = SecurityValidationResult.Ok;
+            return result;
+        }
+
+
+
+
+
+        /// <summary>
+        /// Authenticate using User info only (UserToken). App authentication is not supported.
+        /// Authorization is App based, multiple App is supported with this function.
+        /// </summary>
+        /// <param name="token">UserToken for Authentication</param>
+        /// <param name="roleIds">List of the required assigned Roles, having 1 atleast will authorize the user.</param>
+        /// <returns>Authentication & Authorization result</returns>
+        public AuthResult AuthUserTokenWithRoles(string token, List<string> roleIds)
+        {
+            return AuthUserTokenWithRoles(token, roleIds, TokenValidationMode.UseDefault);
+        }
+
+        /// <summary>
+        /// Authenticate using User info only (UserToken). App authentication is not supported.
+        /// Authorization is App based, multiple App is supported with this function.
+        /// </summary>
+        /// <param name="token">UserToken for Authentication</param>
+        /// <param name="roleIds">List of the required assigned Roles, having 1 atleast will authorize the user.</param>
+        /// <param name="tokenValidationMode">Set the validation mode to DecryptOnly if you want to validate the token only by decrypting it, or decrypt and validate the token using database</param>
+        /// <returns>Authentication & Authorization result</returns>
+        public AuthResult AuthUserTokenWithRoles(string token, List<string> roleIds, TokenValidationMode tokenValidationMode)
+        {
+            AuthResult result = new();
+            result.AuthenticationMode = IDFAuthenticationMode.User;
+            bool validation = false;
+
+            if (tokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                tokenValidationMode = IDFManager.TokenValidationMode;
+            }
+
+            if (tokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                try
+                {
+                    UserClaim claim = Helpers.DecryptUserToken(token);
+                    List<Role> roles = Storage.Roles.Where(o => roleIds.Contains(o.Id.ToLower())).ToList();
+                    if (roles.Count == 0)
+                    {
+                        result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                        return result;
+                    }
+                    result = claim.ToAuthResult();
+                }
+                catch (Exception ex)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+            }
+            else
+            {
+                UserToken userToken = IDFManager.UserTokenServices.Validate(token, TokenValidationMode.UseDefault, "");
+                if (userToken is null)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+
+                result.UserToken = userToken;
+                validation = IDFManager.Context.Roles.Include(r => r.Users).Any(o => roleIds.Contains(o.Id) && o.Users.Any(u => u.Id == userToken.UserId));
+
+
+                if (!validation)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
+                    return result;
+                }
+
+            }
+            result.SecurityValidationResult = SecurityValidationResult.Ok;
+            return result;
+        }
+
+        #endregion
+
+
 
     }
 }

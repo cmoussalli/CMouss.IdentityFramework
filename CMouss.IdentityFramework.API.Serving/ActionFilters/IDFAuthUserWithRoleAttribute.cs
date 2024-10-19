@@ -40,15 +40,15 @@ namespace CMouss.IdentityFramework.API.Serving
                 Helpers.ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
             }
 
-            //AuthResult authResult = IDFManager.AuthService.AuthUserTokenWithRole(userToken.ToString(), _roleId);
+            AuthResult authResult = IDFManager.AuthService.AuthUserTokenWithRole(userToken.ToString(), _roleId);
 
 
-            //if (authResult.SecurityValidationResult == SecurityValidationResult.Ok)
-            //{
-            //    context.ActionArguments["requesterAuthInfo"] = JsonConvert.SerializeObject(Converters.AuthResultConverter.ToAPIAuthResult(authResult));
-            //}
-            //else
-            //{ Helpers.ReturnSecurityFail(context, authResult.SecurityValidationResult.ToString()); }
+            if (authResult.SecurityValidationResult == SecurityValidationResult.Ok)
+            {
+                context.ActionArguments["requesterAuthInfo"] = JsonConvert.SerializeObject(Converters.AuthResultConverter.ToAPIAuthResult(authResult));
+            }
+            else
+            { Helpers.ReturnSecurityFail(context, authResult.SecurityValidationResult.ToString()); }
 
             base.OnActionExecuting(context);
         }

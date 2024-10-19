@@ -12,8 +12,19 @@ namespace CMouss.IdentityFramework
     /// </summary>
     public enum TokenValidationMode
     {
+        /// <summary>
+        /// Use the DefaultTokenValidationMode as per the configuration, this option cannot be setted as the default value in configuration.
+        /// </summary>
         UseDefault,
+
+        /// <summary>
+        /// Tokens will be validated using decription only, this option will improve the performance since it will skip the validation suing database connection.
+        /// </summary>
         DecryptOnly,
+
+        /// <summary>
+        /// Tokens will be validated using decription and database validation, this option will require database connection.
+        /// </summary>
         DecryptAndValidate
     }
 
