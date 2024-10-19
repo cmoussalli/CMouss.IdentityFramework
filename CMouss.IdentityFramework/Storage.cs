@@ -16,10 +16,12 @@ namespace CMouss.IdentityFramework
         public static List<AppPermissionType> AppPermissionTypes { get; set; }
         public static List<AttributeType> AttributeTypes { get; set; }
 
-
+        public static List<Permission> Permissions { get; set; }
 
 
         //public static List<UserSession> Sessions { get; set; } = new();
+
+
 
     }
 }

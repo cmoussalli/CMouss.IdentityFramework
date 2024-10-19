@@ -221,5 +221,27 @@ namespace CMouss.IdentityFramework
         }
 
 
+        public static List<Permission> GetRolesPermissions(List<string> roles)
+        {
+            List<Permission> result = new();
+            result = Storage.Permissions.Where(o => roles.Contains(o.RoleId)).ToList();
+            return result;
+        }
+
+        public static List<Permission> GetRolesPermissions(List<Role> roles)
+        {
+            List<Permission> result = new();
+
+            foreach(Role r in roles)
+            {
+                List<Permission> ps = r.Permissions;
+                if(ps.Count> 0)
+                {
+                    result.AddRange(ps);
+                }
+            }
+            result.Distinct();
+            return result;
+        }
     }
 }

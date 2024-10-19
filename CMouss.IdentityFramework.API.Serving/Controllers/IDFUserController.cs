@@ -32,7 +32,7 @@ namespace CMouss.IdentityFramework.API.Serving
                 {
                     newid = Guid.NewGuid().ToString();
                 }
-                IDFManager.UserServices.Register(username, password, fullname, email);
+                IDFManager.userService.Register(username, password, fullname, email);
                 result.ResponseStatus.SetAsSuccess();
 
                 return Ok(result);
@@ -65,7 +65,7 @@ namespace CMouss.IdentityFramework.API.Serving
                     model.UsersSearch = new Models.UsersSearch { UserName = "" };
 
                 };
-                List<CMouss.IdentityFramework.User> dbUsers = IDFManager.UserServices.Search(Converters.PagingConverter.ToDBPaging(model.Paging), Converters.UsersSearchConverter.ToDBUsersSearch(model.UsersSearch));
+                List<CMouss.IdentityFramework.User> dbUsers = IDFManager.userService.Search(Converters.PagingConverter.ToDBPaging(model.Paging), Converters.UsersSearchConverter.ToDBUsersSearch(model.UsersSearch));
                 result.ResponseStatus.SetAsSuccess();
                 result.Users = Converters.UserConverter.ToAPIUsersList(dbUsers);
             }
@@ -92,7 +92,7 @@ namespace CMouss.IdentityFramework.API.Serving
             try
             {
                 result.ResponseStatus.SetAsSuccess();
-                result.User = Converters.UserConverter.ToAPIUser(IDFManager.UserServices.Details(model.UserId), true, true, null);
+                result.User = Converters.UserConverter.ToAPIUser(IDFManager.userService.Details(model.UserId), true, true, null);
             }
             catch (Exception ex)
             {
@@ -116,7 +116,7 @@ namespace CMouss.IdentityFramework.API.Serving
             try
             {
 
-                string res = IDFManager.UserServices.Create(model.UserName, model.Password, model.FullName, model.Email, model.IsLocked, model.IsActive);
+                string res = IDFManager.userService.Create(model.UserName, model.Password, model.FullName, model.Email, model.IsLocked, model.IsActive);
                 result.ResponseStatus.SetAsSuccess("",res);
                 return Ok(result);
             }
@@ -141,7 +141,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.Update(model.UserId, model.FullName, model.Email, model.IsLocked, model.IsActive );
+                IDFManager.userService.Update(model.UserId, model.FullName, model.Email, model.IsLocked, model.IsActive );
                 result.ResponseStatus.SetAsSuccess("", model.UserId);
                 return Ok(result);
             }
@@ -167,7 +167,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.Delete(model.UserId);
+                IDFManager.userService.Delete(model.UserId);
                 result.ResponseStatus.SetAsSuccess("", model.UserId);
                 return Ok(result);
             }
@@ -197,7 +197,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.ChangePassword(model.UserId, model.NewPassword, model.ChangePrivateKey);
+                IDFManager.userService.ChangePassword(model.UserId, model.NewPassword, model.ChangePrivateKey);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -223,7 +223,7 @@ namespace CMouss.IdentityFramework.API.Serving
             try
             {
             AuthResult authResult = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-                IDFManager.UserServices.ChangePassword(authResult.UserToken.UserId, model.NewPassword, model.ChangePrivateKey);
+                IDFManager.userService.ChangePassword(authResult.UserToken.UserId, model.NewPassword, model.ChangePrivateKey);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -250,7 +250,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.Lock(model.UserId);
+                IDFManager.userService.Lock(model.UserId);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -276,7 +276,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.UnLock(model.UserId);
+                IDFManager.userService.UnLock(model.UserId);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -303,7 +303,7 @@ namespace CMouss.IdentityFramework.API.Serving
             IDFUserResponseModels.GetRoles result = new();
             try
             {
-                List<API.Models.Role> apiRoles = Converters.RoleConverter.ToAPIRolesList(IDFManager.UserServices.GetRoles(model.UserId), false, false);
+                List<API.Models.Role> apiRoles = Converters.RoleConverter.ToAPIRolesList(IDFManager.userService.GetRoles(model.UserId), false, false);
                 result.ResponseStatus.SetAsSuccess();
                 result.Roles = apiRoles;
             }
@@ -329,7 +329,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.GrantRole(model.UserId, model.RoleId);
+                IDFManager.userService.GrantRole(model.UserId, model.RoleId);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -355,7 +355,7 @@ namespace CMouss.IdentityFramework.API.Serving
             GenericResponseModel result = new();
             try
             {
-                IDFManager.UserServices.RevokeRole(model.UserId, model.RoleId);
+                IDFManager.userService.RevokeRole(model.UserId, model.RoleId);
                 result.ResponseStatus.SetAsSuccess();
             }
             catch (Exception ex)
@@ -382,7 +382,7 @@ namespace CMouss.IdentityFramework.API.Serving
             BooleanResponseModel result = new();
             try
             {
-                bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleId);
+                bool res = IDFManager.userService.ValidateUserRole(model.UserId, model.RoleId);
                 result.ResponseStatus.SetAsSuccess();
                 result.Result = res;
             }
@@ -409,7 +409,7 @@ namespace CMouss.IdentityFramework.API.Serving
             BooleanResponseModel result = new();
             try
             {
-                bool res = IDFManager.UserServices.ValidateUserRole(model.UserId, model.RoleIds);
+                bool res = IDFManager.userService.ValidateUserRole(model.UserId, model.RoleIds);
                 result.ResponseStatus.SetAsSuccess();
                 result.Result = res;
             }
@@ -436,7 +436,7 @@ namespace CMouss.IdentityFramework.API.Serving
             BooleanResponseModel result = new();
             try
             {
-                bool res = IDFManager.UserServices.ValidateUserRole(model.Token, model.RoleId);
+                bool res = IDFManager.userService.ValidateUserRole(model.Token, model.RoleId);
                 result.ResponseStatus.SetAsSuccess();
                 result.Result = res;
             }

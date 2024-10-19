@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,7 +22,8 @@ namespace CMouss.IdentityFramework
 
         public List<Permission> GetAll()
         {
-            return IDFManager.Context.Permissions.ToList();
+            Storage.Permissions = IDFManager.Context.Permissions.Include(o => o.Entity).Include(o => o.PermissionType).Include(o => o.Role).ToList();
+            return Storage.Permissions;
         }
 
 

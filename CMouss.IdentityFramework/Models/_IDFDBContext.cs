@@ -59,19 +59,19 @@ namespace CMouss.IdentityFramework
             List<Role> roles = db.Roles.Where(o => o.Title.ToLower() == IDFManager.AdministratorRoleName.ToLower()).ToList();
             if (roles.Count == 0)
             {
-                IDFManager.RoleServices.Create(adminRoleID, IDFManager.AdministratorRoleName);
+                IDFManager.roleService.Create(adminRoleID, IDFManager.AdministratorRoleName);
             }
 
             //Create Admin User
             List<User> users = db.Users.Where(o => o.UserName.ToLower() == IDFManager.AdministratorUserName.ToLower()).ToList();
             if (users.Count == 0)
             {
-                string adminUserID = IDFManager.UserServices.Create(IDFManager.AdministratorUserName, IDFManager.AdministratorPassword, IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com", false, true);
-                IDFManager.UserServices.GrantRole(adminUserID, adminRoleID);
+                string adminUserID = IDFManager.userService.Create(IDFManager.AdministratorUserName, IDFManager.AdministratorPassword, IDFManager.AdministratorUserName, IDFManager.AdministratorUserName + "@mail.com", false, true);
+                IDFManager.userService.GrantRole(adminUserID, adminRoleID);
             }
 
 
-            List<Entity> entities = IDFManager.EntityService.GetAll();
+            List<Entity> entities = IDFManager.entityService.GetAll();
             if (!entities.Exists(o => o.Id == "User"))
             {
                 Entity userEntity = new() { Id = "User", Title = "User" };

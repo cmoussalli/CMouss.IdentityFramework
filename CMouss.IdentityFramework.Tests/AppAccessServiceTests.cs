@@ -17,7 +17,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void GetAppPermissionTypes_Ok()
         {
-            List<AppPermissionType> appPermissionTypes = IDFManager.AppAccessServices.GetAppPermissionTypes("123456-App1AppAccess1Key", "123456-App1AppAccess1Secret");
+            List<AppPermissionType> appPermissionTypes = IDFManager.appAccessService.GetAppPermissionTypes("123456-App1AppAccess1Key", "123456-App1AppAccess1Secret");
 
             Assert.AreEqual(appPermissionTypes.Count, 1);
         }
@@ -63,7 +63,7 @@ namespace CMouss.IdentityFramework.Tests
             db.AppAccess.Add(appAccess);
             db.SaveChanges();
 
-            IDFManager.AppAccessServices.GrantPermission(appAccessId,appPermissionTypeId);
+            IDFManager.appAccessService.GrantPermission(appAccessId,appPermissionTypeId);
 
             db = new IDFDBContext();
             List<AppAccessPermission> res = db.AppAccessPermissions.Where(o =>
@@ -128,7 +128,7 @@ namespace CMouss.IdentityFramework.Tests
                 && o.AppPermissionTypeId == appPermissionTypeId
                 ).ToList();
 
-            IDFManager.AppAccessServices.RevokePermission(appAccessId, appPermissionTypeId);
+            IDFManager.appAccessService.RevokePermission(appAccessId, appPermissionTypeId);
 
             db = new IDFDBContext();
             List<AppAccessPermission> after = db.AppAccessPermissions.Where(o =>
@@ -202,7 +202,7 @@ namespace CMouss.IdentityFramework.Tests
             db.SaveChanges();
 
 
-            bool result =  IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessId, appPermissionTypeId);
+            bool result =  IDFManager.appAccessService.ValidateAppAccessPermission(appAccessId, appPermissionTypeId);
 
             db = new IDFDBContext();
             List<AppAccessPermission> after = db.AppAccessPermissions.Where(o =>

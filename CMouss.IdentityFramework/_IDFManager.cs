@@ -227,14 +227,14 @@ namespace CMouss.IdentityFramework
         public static List<UserSession> UserSessions { get; set; } = new();
 
         #region Services
-        public static RoleService RoleServices = new RoleService();
-        public static UserService UserServices = new UserService();
-        public static UserTokenService UserTokenServices = new UserTokenService();
-        public static AppAccessService AppAccessServices = new AppAccessService();
-        public static AuthService AuthService = new AuthService();
-        public static EntityService EntityService = new EntityService();
-        public static PermissionTypeService PermissionTypeService = new PermissionTypeService();
-        public static PermissionService PermissionService = new PermissionService();
+        public static RoleService roleService = new RoleService();
+        public static UserService userService = new UserService();
+        public static UserTokenService userTokenService = new UserTokenService();
+        public static AppAccessService appAccessService = new AppAccessService();
+        public static AuthService authService = new AuthService();
+        public static EntityService entityService = new EntityService();
+        public static PermissionTypeService permissionTypeService = new PermissionTypeService();
+        public static PermissionService permissionService = new PermissionService();
 
         #endregion
 
@@ -297,7 +297,7 @@ namespace CMouss.IdentityFramework
             //}
             IDFDBContext = new IDFDBContext();
 
-            RoleServices.GetAll();
+            RefreshStorage();
         }
 
 
@@ -307,20 +307,24 @@ namespace CMouss.IdentityFramework
             List<Role> roles = db.Roles.Where(o => o.Title.ToLower() == administratorRoleName.ToLower()).ToList();
             if (roles.Count == 0)
             {
-                RoleServices.Create(administratorRoleId, administratorRoleName);
+                roleService.Create(administratorRoleId, administratorRoleName);
             }
 
             //Create Admin User
             List<User> users = db.Users.Where(o => o.UserName.ToLower() == administratorUserName.ToLower()).ToList();
             if (users.Count == 0)
             {
-                string adminUserID = UserServices.Create(administratorUserName, administratorPassword, administratorUserName, administratorUserName + "@mail.com");
-                UserServices.GrantRole(adminUserID, administratorRoleId);
+                string adminUserID = userService.Create(administratorUserName, administratorPassword, administratorUserName, administratorUserName + "@mail.com");
+                userService.GrantRole(adminUserID, administratorRoleId);
 
             }
         }
 
-
+        public static void RefreshStorage()
+        {
+            roleService.GetAll();
+            permissionService.GetAll();
+        }
 
 
         public static void RefreshDBContext()

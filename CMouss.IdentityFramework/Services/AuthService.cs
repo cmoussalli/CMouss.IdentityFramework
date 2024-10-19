@@ -49,7 +49,7 @@ namespace CMouss.IdentityFramework
                 return result;
             }
 
-            t = IDFManager.UserTokenServices.Create(users[0].Id, ipAddress);
+            t = IDFManager.userTokenService.Create(users[0].Id, ipAddress);
             IDFManager.UserSessionsManager.AddOrUpdate(users[0].Id, ipAddress);
 
             if (IDFManager.AllowUserMultipleSessions)
@@ -157,6 +157,7 @@ namespace CMouss.IdentityFramework
 
         #region Authenticate UserToken Role(s) -2
 
+        #region AuthUserTokenWithRole
         /// <summary>
         /// Authenticate using User info only (UserToken). App authentication is not supported.
         /// Authorization is App based, multiple App is not supported with this function.
@@ -170,8 +171,6 @@ namespace CMouss.IdentityFramework
         {
             return AuthUserTokenWithRole(token, roleId);
         }
-
-
         /// <summary>
         /// Authenticate using User info only (UserToken). App authentication is not supported.
         /// Authorization is App based, multiple App is not supported with this function.
@@ -215,7 +214,7 @@ namespace CMouss.IdentityFramework
             {
 
 
-                UserToken userToken = IDFManager.UserTokenServices.Validate(token, IDFManager.TokenValidationMode, null);
+                UserToken userToken = IDFManager.userTokenService.Validate(token, IDFManager.TokenValidationMode, null);
                 if (userToken is null)
                 {
                     result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
@@ -236,10 +235,9 @@ namespace CMouss.IdentityFramework
             return result;
         }
 
+        #endregion
 
-
-
-
+        #region AuthUserTokenWithRoles
         /// <summary>
         /// Authenticate using User info only (UserToken). App authentication is not supported.
         /// Authorization is App based, multiple App is supported with this function.
@@ -292,7 +290,7 @@ namespace CMouss.IdentityFramework
             }
             else
             {
-                UserToken userToken = IDFManager.UserTokenServices.Validate(token, TokenValidationMode.UseDefault, "");
+                UserToken userToken = IDFManager.userTokenService.Validate(token, TokenValidationMode.UseDefault, "");
                 if (userToken is null)
                 {
                     result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
@@ -316,7 +314,110 @@ namespace CMouss.IdentityFramework
 
         #endregion
 
+        #endregion
 
+
+
+        #region Authenticate UserToken Permission(s) -2
+        /// <summary>
+        /// Authenticate using User info only (UserToken). App authentication is not supported.
+        /// Authorization is Entity and PermissionType based, multiple PermissionType is not supported with this function.
+        /// </summary>
+        /// <param name="token">UserToken for Authentication.</param>
+        /// <param name="entityPermission">The EntityPermission that the requester should have access to.</param>
+        /// <returns>Authentication & Authorization result</returns>
+        public AuthResult AuthUserTokenWithPermission(string token, EntityPermission entityPermission, TokenValidationMode tokenValidationMode)
+        {
+            AuthResult result = new();
+            if (tokenValidationMode == TokenValidationMode.UseDefault)
+            {
+                tokenValidationMode = IDFManager.TokenValidationMode;
+            }
+
+            if (IDFManager.TokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                UserClaim claim = Helpers.DecryptUserToken(token);
+                if (Helpers.GetRolesPermissions(claim.Roles).Any
+                    (
+                    a => a.EntityId.ToLower() == entityPermission.EntityId.ToLower()
+                    && a.PermissionTypeId.ToLower() == entityPermission.PermissionTypeId
+                    )
+                    )
+                {
+                    result = claim.ToAuthResult();
+                }
+
+            }
+            else
+            {
+
+                result.AuthenticationMode = IDFAuthenticationMode.User;
+                bool validation = false;
+                List<UserToken> ts = IDFManager.Context.UserTokens
+                    .Include(t => t.User).ThenInclude(u => u.Roles).ThenInclude(r => r.Permissions)
+                    .Where(o => o.Token.ToLower() == token.ToLower()).ToList();
+                if (ts is null)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+                if (ts.Count < 1)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                    return result;
+                }
+
+                result.UserToken = ts[0];
+                validation = ts[0].User.Roles.Any(r => r.Permissions.Any(p => p.EntityId.ToLower() == entityPermission.EntityId.ToLower() && p.PermissionTypeId.ToLower().Contains(entityPermission.PermissionTypeId.ToLower())));
+
+                if (!validation)
+                {
+                    result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
+                    return result;
+                }
+
+                result.UserToken = ts[0];
+
+            }
+            result.SecurityValidationResult = SecurityValidationResult.Ok;
+            return result;
+        }
+
+        ///// <summary>
+        ///// Authenticate using User info only (UserToken). App authentication is not supported.
+        ///// Authorization is Entity and PermissionType based, multiple PermissionType is supported with this function.
+        ///// </summary>
+        ///// <param name="token">UserToken for Authentication.</param>
+        ///// <param name="entityId">The Entity which user should have access to.</param>
+        ///// <param name="permissionTypeIds">List of the required Entity Permissions, having 1 atleast will authorize the user.</param>
+        ///// <returns>Authentication & Authorization result</returns>
+        //public AuthResult AuthUserTokenWithPermissions(string token, string entityId, List<string> permissionTypeIds)
+        //{
+        //    AuthResult result = new();
+        //    bool validation = false;
+        //    List<UserToken> ts = IDFManager.Context.UserTokens.Where(o => o.Token.ToLower() == token.ToLower()).ToList();
+        //    if (ts.Count < 1)
+        //    {
+        //        result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+        //        return result;
+        //    }
+
+        //    result.UserToken = ts[0];
+        //    validation = ts[0].User.Roles.Any(r => r.Permissions.Any(p => p.EntityId.ToLower() == entityId.ToLower() && permissionTypeIds.Contains(p.PermissionTypeId)));
+
+        //    if (!validation)
+        //    {
+        //        result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
+        //        return result;
+        //    }
+
+        //    result.SecurityValidationResult = SecurityValidationResult.Ok;
+        //    return result;
+        //}
+
+
+
+        #endregion
 
     }
 }

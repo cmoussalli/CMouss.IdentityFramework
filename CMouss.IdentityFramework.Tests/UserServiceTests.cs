@@ -15,7 +15,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void Find_Exists()
         {
-            string newId = IDFManager.UserServices.Create("UserTestExists_True", "P@ssw0rd", "User Test Exists_True", "UserTestExists_True@mail.com");
+            string newId = IDFManager.userService.Create("UserTestExists_True", "P@ssw0rd", "User Test Exists_True", "UserTestExists_True@mail.com");
 
             db = new IDFDBContext();
             User o = db.Users.Find(newId);
@@ -24,7 +24,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void Find_NotExists()
         {
-            string newId = IDFManager.UserServices.Create("UserTestExists_False", "P@ssw0rd", "User Test Exists_False", "UserTestExists_False@mail.com");
+            string newId = IDFManager.userService.Create("UserTestExists_False", "P@ssw0rd", "User Test Exists_False", "UserTestExists_False@mail.com");
 
             db = new IDFDBContext();
             try
@@ -44,7 +44,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void Create()
         {
-            string newId = IDFManager.UserServices.Create("UserTestCreate", "P@ssw0rd", "UserTest Create", "UserTestCreate@mail.com", false, true);
+            string newId = IDFManager.userService.Create("UserTestCreate", "P@ssw0rd", "UserTest Create", "UserTestCreate@mail.com", false, true);
 
             db = new IDFDBContext();
             User o = db.Users.Find(newId);
@@ -55,7 +55,7 @@ namespace CMouss.IdentityFramework.Tests
         //[TestMethod]
         //public void Search()
         //{
-        //    List<User> users = IDFManager.UserServices.Search(new SearchModels.UsersSearchModel {UserName = "Admin" });
+        //    List<User> users = IDFManager.userService.Search(new SearchModels.UsersSearchModel {UserName = "Admin" });
 
         //    Assert.IsTrue( users.Count == 2);
 
@@ -69,7 +69,7 @@ namespace CMouss.IdentityFramework.Tests
         //    string newId = Guid.NewGuid().ToString();
         //    db.Users.Add(new User { Id= newId, Title ="User X UpdateTest" ,IsDeleted = false });
         //    db.SaveChanges();
-        //    IDFManager.UserServices.Update(newId, "User X UpdateTestOK");
+        //    IDFManager.userService.Update(newId, "User X UpdateTestOK");
 
         //    db = new IDFDBContext();
         //    User o = db.Users.Find(newId);
@@ -83,7 +83,7 @@ namespace CMouss.IdentityFramework.Tests
         //    string newId = Guid.NewGuid().ToString();
         //    db.Users.Add(new User { Id = newId, Title = "User X DeleteTest", IsDeleted = false });
         //    db.SaveChanges();
-        //    IDFManager.UserServices.Delete(newId);
+        //    IDFManager.userService.Delete(newId);
 
         //    db = new IDFDBContext();
         //    User o = db.Users.Find(newId);
@@ -96,7 +96,7 @@ namespace CMouss.IdentityFramework.Tests
         //    string newId = Guid.NewGuid().ToString();
         //    db.Users.Add(new User { Id = newId, Title = "User X FindTest", IsDeleted = false });
         //    db.SaveChanges();
-        //    IDFManager.UserServices.Find(newId);
+        //    IDFManager.userService.Find(newId);
 
         //    db = new IDFDBContext();
         //    User o = db.Users.Find(newId);
@@ -108,26 +108,26 @@ namespace CMouss.IdentityFramework.Tests
         //{
         //    string newId = Guid.NewGuid().ToString();
         //    db.Users.Add(new User { Id = newId, Title = "User X GetAllTest", IsDeleted = false });
-        //    List<User> lst = IDFManager.UserServices.GetAll();
+        //    List<User> lst = IDFManager.userService.GetAll();
         //    Assert.IsTrue(lst.Count > 0);
         //}
 
         //[TestMethod]
         //public void ValidateLogin_Bool_True()
         //{
-        //    bool isLogin = IDFManager.UserServices.Login("Username1", "P@ssw0rd");
+        //    bool isLogin = IDFManager.userService.Login("Username1", "P@ssw0rd");
         //    Assert.IsTrue(isLogin);
         //}
         //[TestMethod]
         //public void ValidateLogin_Bool_WrongPassword()
         //{
-        //    bool isLogin = IDFManager.UserServices.Login("Username1", "WrongPassword");
+        //    bool isLogin = IDFManager.userService.Login("Username1", "WrongPassword");
         //    Assert.IsFalse(isLogin);
         //}
         //[TestMethod]
         //public void ValidateLogin_Bool_UsernameNotFound()
         //{
-        //    bool isLogin = IDFManager.UserServices.Login("WrongUserName", "P@ssw0rd");
+        //    bool isLogin = IDFManager.userService.Login("WrongUserName", "P@ssw0rd");
         //    Assert.IsFalse(isLogin);
         //}
 
@@ -150,7 +150,7 @@ namespace CMouss.IdentityFramework.Tests
             db.Users.Add(user);
             db.SaveChanges();
 
-            IDFManager.UserServices.ChangePassword(newUserId, "NewP@ssw0rd", false);
+            IDFManager.userService.ChangePassword(newUserId, "NewP@ssw0rd", false);
         }
 
         [TestMethod]
@@ -171,20 +171,20 @@ namespace CMouss.IdentityFramework.Tests
             db.Users.Add(user);
             db.SaveChanges();
 
-            IDFManager.UserServices.ChangeMyPassword("UserXChangeMyPassword_Ok", "P@ssw0rd", "NewP@ssw0rd", false);
+            IDFManager.userService.ChangeMyPassword("UserXChangeMyPassword_Ok", "P@ssw0rd", "NewP@ssw0rd", false);
         }
 
         [TestMethod]
         public void UserLogin_Ok()
         {
-            AuthResult ar = IDFManager.AuthService.AuthUserLogin("Username1", "P@ssw0rd");
+            AuthResult ar = IDFManager.authService.AuthUserLogin("Username1", "P@ssw0rd");
 
             Assert.IsNotNull(ar.UserToken);
         }
         [TestMethod]
         public void UserLogin_UserNameNotFound()
         {
-            AuthResult ar = IDFManager.AuthService.AuthUserLogin("WrongUsername", "P@ssw0rd");
+            AuthResult ar = IDFManager.authService.AuthUserLogin("WrongUsername", "P@ssw0rd");
             if (ar.SecurityValidationResult == SecurityValidationResult.IncorrectCredentials)
             {
                 Assert.IsTrue(true);
@@ -196,7 +196,7 @@ namespace CMouss.IdentityFramework.Tests
         [TestMethod]
         public void UserLogin_WrongPassword()
         {
-            AuthResult ar = IDFManager.AuthService.AuthUserLogin("Username1", "WrongP@ssw0rd");
+            AuthResult ar = IDFManager.authService.AuthUserLogin("Username1", "WrongP@ssw0rd");
             if (ar.SecurityValidationResult == SecurityValidationResult.IncorrectCredentials)
             {
                 Assert.IsTrue(true);
@@ -228,7 +228,7 @@ namespace CMouss.IdentityFramework.Tests
             db.Roles.Add(new Role { Id = newRoleId, Title = "Role X User.GrantRole_Ok" });
             db.SaveChanges();
 
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId);
+            IDFManager.userService.GrantRole(newUserId, newRoleId);
 
             db = new IDFDBContext();
             User u = db.Users.Include(o => o.Roles).Where(o => o.Id == newUserId).ToList()[0];
@@ -258,9 +258,9 @@ namespace CMouss.IdentityFramework.Tests
             db.Roles.Add(new Role { Id = newRoleId, Title = "Role X User.RevokeRole_Ok" });
             db.SaveChanges();
 
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId);
+            IDFManager.userService.GrantRole(newUserId, newRoleId);
 
-            IDFManager.UserServices.RevokeRole(newUserId, newRoleId);
+            IDFManager.userService.RevokeRole(newUserId, newRoleId);
 
             db = new IDFDBContext();
             User u = db.Users.Include(o => o.Roles).Where(o => o.Id == newUserId).ToList()[0];
@@ -298,8 +298,8 @@ namespace CMouss.IdentityFramework.Tests
             db.Roles.Add(new Role { Id = newRoleId2, Title = "Role X2 User.GetUserPermissions_Ok" });
             db.SaveChanges();
 
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId1);
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId2);
+            IDFManager.userService.GrantRole(newUserId, newRoleId1);
+            IDFManager.userService.GrantRole(newUserId, newRoleId2);
 
             //Add Entities
             string newEntityId1 = Guid.NewGuid().ToString();
@@ -328,7 +328,7 @@ namespace CMouss.IdentityFramework.Tests
 
             db.SaveChanges();
 
-            List<EntityAllowedActionsModel> allowedEntities = IDFManager.UserServices.GetUserPermissions(newUserId);
+            List<EntityAllowedActionsModel> allowedEntities = IDFManager.userService.GetUserPermissions(newUserId);
             Assert.AreEqual(allowedEntities.Count, 2);
             Assert.AreEqual(allowedEntities[0].AllowedActions.Count, 2);
         }
@@ -362,8 +362,8 @@ namespace CMouss.IdentityFramework.Tests
             db.Roles.Add(new Role { Id = newRoleId2, Title = "Role X2 User.GetUserPermissions_Ok" });
             db.SaveChanges();
 
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId1);
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId2);
+            IDFManager.userService.GrantRole(newUserId, newRoleId1);
+            IDFManager.userService.GrantRole(newUserId, newRoleId2);
 
             //Add Entities
             string newEntityId1 = Guid.NewGuid().ToString();
@@ -393,7 +393,7 @@ namespace CMouss.IdentityFramework.Tests
             //db = new IDFDBContext();
             //User u = db.Users.Include(o => o.Roles).Where(o => o.Id == newUserId).ToList()[0];
             //List<Permission> permissions = db.Permissions.Where(o => u.Roles)
-            List<EntityAllowedActionsModel> allowedActions = IDFManager.UserServices.GetUserPermissions(newUserId);
+            List<EntityAllowedActionsModel> allowedActions = IDFManager.userService.GetUserPermissions(newUserId);
             Assert.AreEqual(allowedActions.Count, 2);
         }
 
@@ -424,7 +424,7 @@ namespace CMouss.IdentityFramework.Tests
             //Attached Role to User
             //user.Roles.Add(newRole);
             //db.SaveChanges();
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId);
+            IDFManager.userService.GrantRole(newUserId, newRoleId);
 
             //Add Entity
             db = new IDFDBContext();
@@ -446,7 +446,7 @@ namespace CMouss.IdentityFramework.Tests
 
             //Exec evaluated Method      
             db = new IDFDBContext();
-            bool eval = IDFManager.UserServices.ValidateUserPermission(newUserId, newEntityId1, newPermissionTypeId1);
+            bool eval = IDFManager.userService.ValidateUserPermission(newUserId, newEntityId1, newPermissionTypeId1);
             Assert.IsTrue(eval);
         }
 
@@ -483,12 +483,12 @@ namespace CMouss.IdentityFramework.Tests
             //Attached Role to User
             //user.Roles.Add(newRole);
             //db.SaveChanges();
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId2);
+            IDFManager.userService.GrantRole(newUserId, newRoleId2);
 
 
             //Exec evaluated Method      
             db = new IDFDBContext();
-            bool eval = IDFManager.UserServices.ValidateUserRole(newUserId, newRoleId2);
+            bool eval = IDFManager.userService.ValidateUserRole(newUserId, newRoleId2);
             Assert.IsTrue(eval);
         }
 
@@ -525,13 +525,13 @@ namespace CMouss.IdentityFramework.Tests
             //Attached Role to User
             //user.Roles.Add(newRole);
             //db.SaveChanges();
-            IDFManager.UserServices.GrantRole(newUserId, newRoleId2);
+            IDFManager.userService.GrantRole(newUserId, newRoleId2);
 
 
             //Exec evaluated Method      
             db = new IDFDBContext();
             List<string> rolesEval = new() { "123", newRoleId2 };
-            bool eval = IDFManager.UserServices.ValidateUserRole(newUserId, rolesEval);
+            bool eval = IDFManager.userService.ValidateUserRole(newUserId, rolesEval);
             Assert.IsTrue(eval);
         }
 

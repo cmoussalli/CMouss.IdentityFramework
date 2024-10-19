@@ -16,7 +16,7 @@ namespace CMouss.IdentityFramework.Tests
         public void Create()
         {
             string newId = Guid.NewGuid().ToString();
-            IDFManager.RoleServices.Create(newId, "Role X CreateTest");
+            IDFManager.roleService.Create(newId, "Role X CreateTest");
 
             Role o = db.Roles.Find(newId);
             Assert.IsNotNull(o);
@@ -28,7 +28,7 @@ namespace CMouss.IdentityFramework.Tests
             string newId = Guid.NewGuid().ToString();
             db.Roles.Add(new Role { Id= newId, Title ="Role X UpdateTest" });
             db.SaveChanges();
-            IDFManager.RoleServices.Update(newId, "Role X UpdateTestOK");
+            IDFManager.roleService.Update(newId, "Role X UpdateTestOK");
 
             db = new IDFDBContext();
             Role o = db.Roles.Find(newId);
@@ -55,7 +55,7 @@ namespace CMouss.IdentityFramework.Tests
             string newId = Guid.NewGuid().ToString();
             db.Roles.Add(new Role { Id = newId, Title = "Role X FindTest" });
             db.SaveChanges();
-            IDFManager.RoleServices.Find(newId);
+            IDFManager.roleService.Find(newId);
 
             db = new IDFDBContext();
             Role o = db.Roles.Find(newId);
@@ -67,7 +67,7 @@ namespace CMouss.IdentityFramework.Tests
         {
             string newId = Guid.NewGuid().ToString();
             db.Roles.Add(new Role { Id = newId, Title = "Role X GetAllTest" });
-            List<Role> lst = IDFManager.RoleServices.GetAll();
+            List<Role> lst = IDFManager.roleService.GetAll();
             Assert.IsTrue(lst.Count > 0);
         }
 

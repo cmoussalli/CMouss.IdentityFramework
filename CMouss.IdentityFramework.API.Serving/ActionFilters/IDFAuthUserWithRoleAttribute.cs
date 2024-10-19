@@ -40,7 +40,7 @@ namespace CMouss.IdentityFramework.API.Serving
                 Helpers.ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
             }
 
-            AuthResult authResult = IDFManager.AuthService.AuthUserTokenWithRole(userToken.ToString(), _roleId);
+            AuthResult authResult = IDFManager.authService.AuthUserTokenWithRole(userToken.ToString(), _roleId);
 
 
             if (authResult.SecurityValidationResult == SecurityValidationResult.Ok)

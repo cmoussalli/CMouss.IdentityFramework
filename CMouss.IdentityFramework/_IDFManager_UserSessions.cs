@@ -56,7 +56,7 @@ namespace CMouss.IdentityFramework
                 UserSession session = IDFManager.UserSessions.Find(o => o.UserId.ToLower() == userId.ToLower() && o.IPAddress == ipAddress);
                 if (session is null)
                 {
-                    User user = IDFManager.UserServices.Details(userId);
+                    User user = IDFManager.userService.Details(userId);
                     if (user.LastIPAddress == ipAddress && !user.IsDeleted)
                     {
                         AddOrUpdate(userId, ipAddress);

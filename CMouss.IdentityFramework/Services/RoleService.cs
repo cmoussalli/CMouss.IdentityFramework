@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace CMouss.IdentityFramework
 {
@@ -21,7 +22,7 @@ namespace CMouss.IdentityFramework
 
         public List<Role> GetAll()
         {
-            Storage.Roles = IDFManager.Context.Roles.ToList();
+            Storage.Roles = IDFManager.Context.Roles.Include(o => o.Permissions).ToList();
             return Storage.Roles;
         }
 

@@ -27,7 +27,7 @@ namespace CMouss.IdentityFramework.API.Serving
             try
             {
                 string ip = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-                AuthResult authResult = IDFManager.AuthService.AuthUserLogin(username, password,ip);
+                AuthResult authResult = IDFManager.authService.AuthUserLogin(username, password,ip);
                 result.ResponseStatus.SetAsSuccess();
                 result.AuthResult = Converters.AuthResultConverter.ToAPIAuthResult(authResult);
 
@@ -53,7 +53,7 @@ namespace CMouss.IdentityFramework.API.Serving
             try
             {
                 string ip = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-                AuthResult authResult = IDFManager.AuthService.AuthUserToken(userToken,TokenValidationMode.UseDefault, "");
+                AuthResult authResult = IDFManager.authService.AuthUserToken(userToken,TokenValidationMode.UseDefault, "");
                 result.ResponseStatus.SetAsSuccess();
                 result.AuthResult = Converters.AuthResultConverter.ToAPIAuthResult(authResult);
             }

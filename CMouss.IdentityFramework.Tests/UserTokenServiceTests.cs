@@ -33,7 +33,7 @@ namespace CMouss.IdentityFramework.Tests
             db.Users.Add(user);
             db.SaveChanges();
 
-            IDFManager.UserTokenServices.Create(newUserId, new LifeTime(1, 0, 0),"");
+            IDFManager.userTokenService.Create(newUserId, new LifeTime(1, 0, 0),"");
 
             db = new IDFDBContext();
             UserToken t = db.UserTokens.Where(o =>
@@ -72,7 +72,7 @@ namespace CMouss.IdentityFramework.Tests
             db.UserTokens.Add(token);
             db.SaveChanges();
 
-            UserToken verify = IDFManager.UserTokenServices.Validate(newToken,TokenValidationMode.UseDefault, "");
+            UserToken verify = IDFManager.userTokenService.Validate(newToken,TokenValidationMode.UseDefault, "");
 
             Assert.IsNotNull(verify);
         }
@@ -103,7 +103,7 @@ namespace CMouss.IdentityFramework.Tests
             db.UserTokens.Add(token);
             db.SaveChanges();
 
-            UserToken verify = IDFManager.UserTokenServices.Validate(newToken,TokenValidationMode.UseDefault,"");
+            UserToken verify = IDFManager.userTokenService.Validate(newToken,TokenValidationMode.UseDefault,"");
 
             Assert.IsNull(verify);
         }
@@ -138,7 +138,7 @@ namespace CMouss.IdentityFramework.Tests
             db.UserTokens.Add(token);
             db.SaveChanges();
 
-            IDFManager.UserTokenServices.Delete(newToken);
+            IDFManager.userTokenService.Delete(newToken);
 
 
         }
