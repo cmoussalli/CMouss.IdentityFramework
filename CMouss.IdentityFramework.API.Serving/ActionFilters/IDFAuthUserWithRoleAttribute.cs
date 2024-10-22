@@ -11,8 +11,6 @@ using Newtonsoft.Json;
 namespace CMouss.IdentityFramework.API.Serving
 {
 
-
-
     public class IDFAuthUserWithRoleAttribute : IDFBaseActionFilterAttribute
     {
 
@@ -29,26 +27,21 @@ namespace CMouss.IdentityFramework.API.Serving
             (roleId);
 
 
-
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             context.HttpContext.Request.Headers.TryGetValue("userToken", out var userToken);
 
-
             if (string.IsNullOrEmpty(userToken))
             {
-                Helpers.ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
+                ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
             }
 
             AuthResult authResult = IDFManager.authService.AuthUserTokenWithRole(userToken.ToString(), _roleId);
 
-
-            if (authResult.SecurityValidationResult == SecurityValidationResult.Ok)
+            if (authResult.SecurityValidationResult != SecurityValidationResult.Ok)
             {
-                context.ActionArguments["requesterAuthInfo"] = JsonConvert.SerializeObject(Converters.AuthResultConverter.ToAPIAuthResult(authResult));
+                ReturnSecurityFail(context, authResult.SecurityValidationResult.ToString());
             }
-            else
-            { Helpers.ReturnSecurityFail(context, authResult.SecurityValidationResult.ToString()); }
 
             base.OnActionExecuting(context);
         }

@@ -32,7 +32,7 @@ namespace CMouss.IdentityFramework.ViewModels
             
             result.UserToken = new();
             result.UserToken.UserId = UserId;
-            result.UserToken.Token = JsonSerializer.Serialize(this);
+            result.UserToken.Token = Helpers.Encrypt( JsonSerializer.Serialize(this) ,IDFManager.TokenEncryptionKey);
             result.UserToken.IPAddress = IPAddress;
             result.UserToken.ExpireDate = TokenExpireDate;
 

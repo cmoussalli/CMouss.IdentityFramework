@@ -1,4 +1,5 @@
 ﻿using CMouss.IdentityFramework.API.Serving;
+using CMouss.IdentityFramework.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CMouss.IdentityFramework.APIServer.Controllers
 {
-    public class TestController : Controller
+    public class TestController : IDFBaseController
     {
 
         [HttpGet]
@@ -49,24 +50,25 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
         [Route("api/test/usertoken")]
         [IDFAuthUser()]
         public async Task<IActionResult> TestAuthUserToken(
-            [FromHeader] string userToken
-            , string requesterAuthInfo)
+            [FromHeader] string userToken)
         {
-            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
-                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+            //AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+            //return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
+            //    + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+
+            UserClaim claim = GetUserClaim();
+            return Ok(claim);
+
         }
 
         [HttpPost]
         [Route("api/test/UserWithRole")]
         [IDFAuthUserWithRole("Administrators")]
         public async Task<IActionResult> TestAuthUserWithRole(
-            [FromHeader] string userToken
-            , string requesterAuthInfo)
+            [FromHeader] string userToken)
         {
-            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
-                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+            UserClaim claim = GetUserClaim();
+            return Ok(claim);
         }
 
         [HttpPost]

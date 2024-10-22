@@ -35,18 +35,17 @@ namespace CMouss.IdentityFramework.API.Serving
 
             if (string.IsNullOrEmpty(userToken))
             {
-                Helpers.ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
+                ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
             }
 
+            //string ip = context.HttpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString();
             AuthResult authResult = IDFManager.authService.AuthUserTokenWithPermission(userToken.ToString(), new EntityPermission(_entityId, _permissionTypeId));
 
 
-            if (authResult.SecurityValidationResult == SecurityValidationResult.Ok)
+            if (authResult.SecurityValidationResult != SecurityValidationResult.Ok)
             {
-                context.ActionArguments["requesterAuthInfo"] = JsonConvert.SerializeObject(Converters.AuthResultConverter.ToAPIAuthResult(authResult));
+                ReturnSecurityFail(context, authResult.SecurityValidationResult.ToString());
             }
-            else
-            { Helpers.ReturnSecurityFail(context, authResult.SecurityValidationResult.ToString()); }
 
             base.OnActionExecuting(context);
         }

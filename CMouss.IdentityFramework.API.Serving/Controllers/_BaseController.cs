@@ -1,4 +1,5 @@
 ﻿using CMouss.IdentityFramework.API.Models;
+using CMouss.IdentityFramework.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -6,14 +7,45 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using CMouss.IdentityFramework;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 
 namespace CMouss.IdentityFramework.API.Serving
 {
-    public class BaseController : Controller
+    public class IDFBaseController : Controller
     {
-        #region Security Validations
+        public UserClaim GetUserClaim()
+        {
+            UserClaim claim = new();
+            bool canGetClaim = Request.Headers.TryGetValue("userToken", out var encryptedStr);
+            if (!canGetClaim)
+            {
+                throw new Exception("UserToken is not found in the request header.");
+            }
+            claim = Helpers.DecryptUserToken(encryptedStr);
+            return claim;
+        }
 
+
+        public static void ReturnSecurityFail(ActionExecutingContext context, string content)
+        {
+            context.Result = new ContentResult
+            {
+                Content = content
+                   ,
+                StatusCode = 403
+                   ,
+                ContentType = "text/plain"
+            };
+            //context.Result = new StatusCodeResult(403); // Return a Forbidden HTTP status code
+
+            return;
+        }
+
+
+
+        #region Security Validations
         public enum SecurityValidationResult
         {
             Ok = 0,
@@ -24,114 +56,7 @@ namespace CMouss.IdentityFramework.API.Serving
             IncorrectAppAccess = 12,
             UnAuthorized = 16,
 
-
         }
-
-        //public SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string userRole,
-        //    string appAccessKey, string appAccessSecret, string appPermissionTypeId)
-        //{
-        //    SecurityValidationResult result = SecurityValidationResult.UnknownError;
-        //    bool isAuthorized = false;
-        //    if (
-        //        (
-        //        !String.IsNullOrEmpty(userToken) && !String.IsNullOrEmpty(userRole)
-        //        && String.IsNullOrEmpty(appAccessKey) && String.IsNullOrEmpty(appAccessSecret) && String.IsNullOrEmpty(appPermissionTypeId)
-        //        ) || (
-        //        String.IsNullOrEmpty(userToken) && String.IsNullOrEmpty(userRole)
-        //        && !String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && !String.IsNullOrEmpty(appPermissionTypeId)
-        //        )
-        //    ) { }
-        //    else { }
-
-        //    try
-        //    {
-        //        if (!String.IsNullOrEmpty(userToken))
-        //        { isAuthorized = IDFManager.UserServices.ValidateTokenRole(userToken, userRole); }
-
-        //        if (!String.IsNullOrEmpty(appAccessKey) && isAuthorized == false)
-        //        { isAuthorized = IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessKey, appAccessSecret, appPermissionTypeId); }
-
-        //    }
-        //    catch (InvalidAppAccessKeyOrSecretException)
-        //    {
-        //        result = SecurityValidationResult.IncorrectAppAccess;
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-
-        //        switch (ex.Message)
-        //        {
-        //            case "IncorrectToken":
-        //                result = SecurityValidationResult.IncorrectToken;
-        //                return result;
-        //                break;
-
-        //            default:
-        //                throw new Exception(ex.Message);
-        //                break;
-        //        }
-
-
-        //    }
-        //    if (isAuthorized)
-        //    {
-        //        result = SecurityValidationResult.Ok;
-        //    }
-        //    else
-        //    {
-        //        result = SecurityValidationResult.UnAuthorized;
-        //    }
-        //    return result;
-        //}
-
-        //public SecurityValidationResult ValidateUserTokenOrAppAccess(string userToken, string entityId, string permissionTypeId,
-        //    string appAccessKey, string appAccessSecret, string appPermissionTypeId)
-        //{
-        //    SecurityValidationResult result = SecurityValidationResult.UnknownError;
-        //    bool isAuthorized = false;
-        //    if (
-        //        (
-        //        !String.IsNullOrEmpty(userToken) && !String.IsNullOrEmpty(entityId) && !String.IsNullOrEmpty(permissionTypeId)
-        //        && String.IsNullOrEmpty(appAccessKey) && String.IsNullOrEmpty(appAccessSecret) && String.IsNullOrEmpty(appPermissionTypeId)
-        //        ) || (
-        //        String.IsNullOrEmpty(userToken) && String.IsNullOrEmpty(entityId) && String.IsNullOrEmpty(permissionTypeId)
-        //        && !String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && !String.IsNullOrEmpty(appPermissionTypeId)
-        //        )
-        //    ) { }
-        //    else { }
-
-        //    try
-        //    {
-        //        if (!String.IsNullOrEmpty(userToken))
-        //        { isAuthorized = IDFManager.UserServices.ValidateTokenPermission(userToken, entityId, permissionTypeId); }
-
-        //        if (!String.IsNullOrEmpty(appAccessKey) && !String.IsNullOrEmpty(appAccessSecret) && isAuthorized == false)
-        //        { isAuthorized = IDFManager.AppAccessServices.ValidateAppAccessPermission(appAccessKey, appAccessSecret, appPermissionTypeId); }
-
-        //    }
-        //    catch (InvalidAppAccessKeyOrSecretException)
-        //    {
-        //        result = SecurityValidationResult.IncorrectAppAccess;
-        //        return result;
-        //    }
-        //    catch (InvalidTokenException)
-        //    {
-        //        result = SecurityValidationResult.IncorrectToken;
-        //        return result;
-        //    }
-
-
-        //    if (isAuthorized)
-        //    {
-        //        result = SecurityValidationResult.Ok;
-        //    }
-        //    else
-        //    {
-        //        result = SecurityValidationResult.UnAuthorized;
-        //    }
-        //    return result;
-        //}
 
         #endregion
 
@@ -152,30 +77,7 @@ namespace CMouss.IdentityFramework.API.Serving
                 , UnAuthorized = 30017
         }
 
-        //public GenericResponseModel GetGenericResponse(ResponseTemplate template)
-        //{
-        //    GenericResponseModel res = new();
-        //    switch (template)
-        //    {
-        //        case ResponseTemplate.Ok: res.ResponseStatus.SetAsSuccess(); break;
-        //        //case ResponseTemplate.UnAuthorized: res.ResponseStatus.SetAsUnAuthorized(); break;
-        //        //case ResponseTemplate.UnAuthenticated: res.ResponseStatus.(); break;
 
-        //        default:
-        //            res.ResponseStatus.IsSuccess = false;
-        //            ErrorType er = BADNServices.ErrorTypeList.First(o => o.Id == template.GetHashCode());
-        //            if (er == null)
-        //            {
-        //                res.ResponseStatus.Errors.Add(new ErrorModel { Code = template.GetHashCode().ToString(), Message = template.ToString() });
-        //            }
-        //            else
-        //            {
-        //                res.ResponseStatus.Errors.Add(new ErrorModel { Code = template.GetHashCode().ToString(), Message = er.TitleEn });
-        //            }
-        //            break;
-        //    }
-        //    return res;
-        //}
         public GenericResponseModel GetGenericResponse(ResponseTemplate template, string message, string error)
         {
             GenericResponseModel res = new();
