@@ -105,14 +105,17 @@ namespace CMouss.IdentityFramework
                 }
                 else
                 {
-                    if (!lst[0].User.LastIPAddress.Contains(ipAddress))
+                    if (ipAddress is not null)
                     {
-                        List<UserToken> killTokens = IDFManager.Context.UserTokens.Where(o => o.UserId == lst[0].UserId && o.IPAddress.ToLower() != ipAddress.ToLower()).ToList();
-                        IDFManager.Context.RemoveRange(killTokens);
-                        lst[0].User.LastIPAddress = ipAddress;
-                        IDFManager.Context.SaveChanges();
+                        if (!lst[0].User.LastIPAddress.Contains(ipAddress))
+                        {
+                            List<UserToken> killTokens = IDFManager.Context.UserTokens.Where(o => o.UserId == lst[0].UserId && o.IPAddress.ToLower() != ipAddress.ToLower()).ToList();
+                            IDFManager.Context.RemoveRange(killTokens);
+                            lst[0].User.LastIPAddress = ipAddress;
+                            IDFManager.Context.SaveChanges();
+                        }
                     }
-                   
+
                 }
 
 

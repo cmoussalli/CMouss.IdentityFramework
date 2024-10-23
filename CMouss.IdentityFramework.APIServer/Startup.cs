@@ -79,7 +79,7 @@ namespace CMouss.IdentityFramework.APIServer
                 DefaultTokenLifeTime = new LifeTime(30, 0, 0),
                 AllowUserMultipleSessions = false,
                 TokenEncryptionKey = "123456",
-                TokenValidationMode = TokenValidationMode.DecryptAndValidate
+                TokenValidationMode = TokenValidationMode.DecryptOnly
             }); 
 
             IDFDBContext db = new IDFDBContext();

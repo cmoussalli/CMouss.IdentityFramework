@@ -171,7 +171,7 @@ namespace CMouss.IdentityFramework
         /// <exception cref="InvalidTokenException"></exception>
         public AuthResult AuthUserTokenWithRole(string token, string roleId)
         {
-            return AuthUserTokenWithRole(token, roleId);
+            return AuthUserTokenWithRole(token, roleId, TokenValidationMode.UseDefault);
         }
         /// <summary>
         /// Authenticate using User info only (UserToken). App authentication is not supported.
@@ -201,7 +201,7 @@ namespace CMouss.IdentityFramework
                     List<Role> roles = Storage.Roles.Where(o => o.Id.ToLower() == roleId.ToLower()).ToList();
                     if (roles.Count == 0)
                     {
-                        result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                        result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
                         return result;
                     }
                     result = claim.ToAuthResult();
