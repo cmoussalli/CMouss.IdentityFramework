@@ -11,17 +11,14 @@ using Newtonsoft.Json;
 namespace CMouss.IdentityFramework.API.Serving
 {
 
-
-
-    public class IDFAuthUserWithRolesOrPermissionsAttribute : IDFBaseActionFilterAttribute
+    public class IDFAuthUserWithPermissionsAttribute : IDFBaseActionFilterAttribute
     {
 
-        private readonly string _roleIds;
         private readonly string _entityPermissions;
 
-        public IDFAuthUserWithRolesOrPermissionsAttribute(string roleIds, string entityPermissions) =>
-            (_roleIds,_entityPermissions) =
-            (roleIds, entityPermissions);
+        public IDFAuthUserWithPermissionsAttribute(string entityPermissions) =>
+            (_entityPermissions) =
+            (entityPermissions);
 
 
 
@@ -35,11 +32,8 @@ namespace CMouss.IdentityFramework.API.Serving
             }
 
             List<EntityPermission> permissions = new List<EntityPermission>();
-            List<string> roles = new();
-
-            _roleIds.Split(",").ToList().ForEach(r => roles.Add(r.Trim()));
-
-            foreach (string entityPermissionStr in _entityPermissions.Split(",").ToList())
+            List<string> entityPermissionsStr = _entityPermissions.Split(",").ToList();
+            foreach (string entityPermissionStr in entityPermissionsStr)
             {
                 List<string> entityPermissionParts = entityPermissionStr.Split(":").ToList();
                 if (entityPermissionParts.Count == 2)
@@ -49,9 +43,8 @@ namespace CMouss.IdentityFramework.API.Serving
                 }
             }
 
-
-
-            AuthResult authResult = IDFManager.authService.AuthUserTokenWithPermissionsOrRoles(userToken.ToString(), permissions, roles );
+            //string ip = context.HttpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString();
+            AuthResult authResult = IDFManager.authService.AuthUserTokenWithPermissions(userToken.ToString(), permissions);
 
 
             if (authResult.SecurityValidationResult != SecurityValidationResult.Ok)

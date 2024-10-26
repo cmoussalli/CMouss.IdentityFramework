@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 namespace CMouss.IdentityFramework
 {
@@ -358,14 +359,21 @@ namespace CMouss.IdentityFramework
                 try
                 {
                     UserClaim claim = Helpers.DecryptUserToken(token);
-                    if (Helpers.GetRolesPermissions(claim.Roles).Any
+                    List<Permission> userPermissions = Helpers.GetRolesPermissions(claim.Roles);
+                    if (userPermissions.Any
                         (
                         a => a.EntityId.ToLower() == entityPermission.EntityId.ToLower()
-                        && a.PermissionTypeId.ToLower() == entityPermission.PermissionTypeId
+                        && a.PermissionTypeId.ToLower() == entityPermission.PermissionTypeId.ToLower()
                         )
                         )
                     {
                         result = claim.ToAuthResult();
+                        result.SecurityValidationResult = SecurityValidationResult.Ok;
+                    }
+                    else
+                    {
+                        result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
+                        return result;
                     }
 
                 }
@@ -374,6 +382,12 @@ namespace CMouss.IdentityFramework
                     result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
                     return result;
                 }
+
+
+
+
+
+
             }
             else
             {
@@ -404,9 +418,10 @@ namespace CMouss.IdentityFramework
                 }
 
                 result.UserToken = ts[0];
+                result.SecurityValidationResult = SecurityValidationResult.Ok;
 
             }
-            result.SecurityValidationResult = SecurityValidationResult.Ok;
+
             return result;
         }
         #endregion
@@ -443,10 +458,11 @@ namespace CMouss.IdentityFramework
 
             if (IDFManager.TokenValidationMode == TokenValidationMode.DecryptOnly)
             {
-                try
+                try //////// Decrypt Only
                 {
                     UserClaim claim = Helpers.DecryptUserToken(token);
-                    if (Helpers.GetRolesPermissions(claim.Roles).Any
+                    List<Permission> userPermissions = Helpers.GetRolesPermissions(claim.Roles);
+                    if (userPermissions.Any
                         (
                             a => entityPermissions.Any(e =>
                                 e.EntityId.ToLower() == a.EntityId.ToLower() && e.PermissionTypeId.ToLower() == a.PermissionTypeId.ToLower()))
@@ -462,7 +478,7 @@ namespace CMouss.IdentityFramework
                     return result;
                 }
             }
-            else
+            else //////// Decrypt and Validate
             {
 
                 result.AuthenticationMode = IDFAuthenticationMode.User;
@@ -506,35 +522,28 @@ namespace CMouss.IdentityFramework
 
         #region AuthUserTokenWithPermissionsOrRoles
 
-        public AuthResult AuthUserTokenWithPermissionsOrRoles(string token, List<EntityPermission> entityPermissions, List<Role> roles, TokenValidationMode tokenValidationMode)
+
+        public AuthResult AuthUserTokenWithPermissionsOrRoles(string token, List<EntityPermission> entityPermissions, List<string> roleIds)
         {
-            if (entityPermissions.Count == 0 && roles.Count == 0)
+            return AuthUserTokenWithPermissionsOrRoles(token, entityPermissions, roleIds, TokenValidationMode.UseDefault);
+        }
+
+        public AuthResult AuthUserTokenWithPermissionsOrRoles(string token, List<EntityPermission> entityPermissions, List<string> roleIds, TokenValidationMode tokenValidationMode)
+        {
+            AuthResult result = new();
+            bool validationPassed = false;
+            result.AuthenticationMode = IDFAuthenticationMode.User;
+            if (entityPermissions.Count == 0 && roleIds.Count == 0)
             {
                 throw new Exception("Error in parameters, both entityPermissions and roles are empty");
             }
-            List<Permission> validatePermissions = new();
-            if (entityPermissions.Count > 0)
-            {
-                foreach(EntityPermission ep in entityPermissions)
-                {
-                    Permission p = new();
-                    p.EntityId = ep.EntityId;
-                    p.PermissionTypeId = ep.PermissionTypeId;
-                    validatePermissions.Add(p);
-                }
-                foreach(Role r in roles)
-                {
-                    if (r.Permissions is not null)
-                    {
-                        if (r.Permissions.Count > 0)
-                        {
-                            validatePermissions.AddRange(r.Permissions);
-                        }
-                    }
-                }
-            }
+            List<Role> validateRoles = Storage.Roles.Where(o => roleIds.Contains(o.Id.ToLower())).ToList();
 
-            AuthResult result = new();
+            UserClaim claim = Helpers.DecryptUserToken(token);
+            List<Permission> userPermissions = Helpers.GetRolesPermissions(claim.Roles);
+            List<Role> userRoles = Storage.Roles.Where(o => claim.Roles.Contains(o.Id.ToLower())).ToList();
+
+
             result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
             if (tokenValidationMode == TokenValidationMode.UseDefault)
             {
@@ -543,16 +552,31 @@ namespace CMouss.IdentityFramework
 
             if (tokenValidationMode == TokenValidationMode.DecryptOnly)
             {
-                try
+                try /////////// Decrypt Only
                 {
-                    UserClaim claim = Helpers.DecryptUserToken(token);
-                    if (validatePermissions.Any
+                    //Validate Roles
+                    if (roleIds.Count > 0)
+                    {
+                        if (userRoles.Any(r => roleIds.Contains(r.Id.ToLower())))
+                        {
+                            result = claim.ToAuthResult();
+                            validationPassed = true;
+                        }
+                    }
+
+                    // Validate Permissions
+                    if (!validationPassed)
+                    {
+                        if (userPermissions.Any
                         (
                             a => entityPermissions.Any(e =>
                                 e.EntityId.ToLower() == a.EntityId.ToLower() && e.PermissionTypeId.ToLower() == a.PermissionTypeId.ToLower()))
                         )
-                    {
-                        result = claim.ToAuthResult();
+                        {
+                            result = claim.ToAuthResult();
+                            validationPassed = true;
+                        }
+
                     }
 
                 }
@@ -563,12 +587,9 @@ namespace CMouss.IdentityFramework
                 }
 
             }
-            else
+            else //////////// Decrypt and Validate
             {
 
-
-                result.AuthenticationMode = IDFAuthenticationMode.User;
-                bool validation = false;
                 List<UserToken> ts = IDFManager.Context.UserTokens
                     .Include(t => t.User).ThenInclude(u => u.Roles).ThenInclude(r => r.Permissions)
                     .Where(o => o.Token.ToLower() == token.ToLower()).ToList();
@@ -577,29 +598,35 @@ namespace CMouss.IdentityFramework
                     result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
                     return result;
                 }
-                if (ts.Count < 1)
+                if (ts.Count == 0)
                 {
                     result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
                     return result;
                 }
-
                 result.UserToken = ts[0];
-                //List<Permission> rolePermissions = Helpers.GetRolesPermissions(result.UserToken.User.Roles);
-                validation = validatePermissions.Any(rp => entityPermissions.Any(ep => ep.EntityId.ToLower() == rp.EntityId.ToLower() && ep.PermissionTypeId.ToLower() == rp.PermissionTypeId.ToLower()));
 
-                if (!validation)
+                //Validate Roles
+                validationPassed = IDFManager.Context.Roles.Include(r => r.Users).Any(o => roleIds.Contains(o.Id) && o.Users.Any(u => u.Id == result.UserToken.UserId));
+
+
+                //Validate Permissions
+                if (!validationPassed)
+                {
+                    validationPassed = entityPermissions.Any(rp => entityPermissions.Any(ep => ep.EntityId.ToLower() == rp.EntityId.ToLower() && ep.PermissionTypeId.ToLower() == rp.PermissionTypeId.ToLower()));
+                }
+
+                if (!validationPassed)
                 {
                     result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
                     return result;
                 }
 
-                result.UserToken = ts[0];
-                result.SecurityValidationResult = SecurityValidationResult.Ok;
 
             }
 
 
 
+            result.SecurityValidationResult = SecurityValidationResult.Ok;
             return result;
         }
 

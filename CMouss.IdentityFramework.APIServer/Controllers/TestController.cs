@@ -3,6 +3,7 @@ using CMouss.IdentityFramework.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -63,7 +64,7 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
 
         [HttpPost]
         [Route("api/test/UserWithRole")]
-        [IDFAuthUserWithRole("Administrators")]
+        [IDFAuthUserWithRoles("Administrators")]
         public async Task<IActionResult> TestAuthUserWithRole(
             [FromHeader] string userToken)
         {
@@ -72,33 +73,44 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
         }
 
         [HttpPost]
-        [Route("api/test/UserWithPermission")]
-        [IDFAuthUserWithPermission("Entity1", "PermissionType1")]
-        public async Task<IActionResult> TestAuthUserWithPermission(
-            [FromHeader] string userToken
-            , string requesterAuthInfo)
+        [Route("api/test/UserWithRoles")]
+        [IDFAuthUserWithRoles("Administrators,Role2" )]
+        public async Task<IActionResult> TestAuthUserWithRoles(
+    [FromHeader] string userToken)
         {
-            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
-                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+            UserClaim claim = GetUserClaim();
+            return Ok(claim);
         }
+
+
+
 
         [HttpPost]
-        [Route("api/test/UserWithRolesOrPermission")]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "Entity1", "PermissionType1")]
-        public async Task<IActionResult> TestAuthUserWithRolesOrPermission(
-            [FromHeader] string userToken
-            , string requesterAuthInfo)
+        [Route("api/test/UserWithPermission")]
+        [IDFAuthUserWithPermissions("User:Search")]
+        public async Task<IActionResult> TestAuthUserWithPermission(
+            [FromHeader] string userToken)
         {
-            AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-            return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
-                + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+            UserClaim claim = GetUserClaim();
+            return Ok(claim);
         }
 
+        //[HttpPost]
+        //[Route("api/test/UserWithRolesOrPermission")]
+        //[IDFAuthUserWithRoleOrPermission( )]
+        //public async Task<IActionResult> TestAuthUserWithRolesOrPermission(
+        //    [FromHeader] string userToken
+        //    , string requesterAuthInfo)
+        //{
+        //    AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
+        //    return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
+        //        + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
+        //}
 
-        public string ConvertAuthResultToShortString(AuthResult authResult)
-        {
-            return $"Auth Test:{Environment.NewLine}AuthMode: {authResult.AuthenticationMode.ToString()}, UserId: {authResult.UserToken.User.Id}, UserName: {authResult.UserToken.User.UserName}";
-        }
+
+        //public string ConvertAuthResultToShortString(AuthResult authResult)
+        //{
+        //    return $"Auth Test:{Environment.NewLine}AuthMode: {authResult.AuthenticationMode.ToString()}, UserId: {authResult.UserToken.User.Id}, UserName: {authResult.UserToken.User.UserName}";
+        //}
     }
 }

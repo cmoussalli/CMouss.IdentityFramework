@@ -49,7 +49,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Search
         [HttpPost]
         [Route(APIRoutes.User.Search)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User","Search")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult Search(
             [FromBody] IDFUserRequestModels.Search model
            , [FromHeader] string userToken
@@ -81,7 +81,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Details
         [HttpPost]
         [Route(APIRoutes.User.Details)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Details")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Details")]
         public IActionResult Details(
             [FromBody] Models.IDFUserRequestModels.Details model
            , [FromHeader] string userToken
@@ -106,7 +106,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Create
         [HttpPost]
         [Route(APIRoutes.User.Create)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Create")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Create")]
         public IActionResult Create(
             [FromBody] Models.IDFUserRequestModels.Create model
            , [FromHeader] string userToken
@@ -131,7 +131,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Update
         [HttpPost]
         [Route(APIRoutes.User.Update)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Update")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult Update(
             [FromBody] Models.IDFUserRequestModels.Update model
            , [FromHeader] string userToken
@@ -157,7 +157,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Delete
         [HttpPost]
         [Route(APIRoutes.User.Delete)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Delete")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult Delete(
             [FromBody] Models.IDFUserRequestModels.Delete model
            , [FromHeader] string userToken
@@ -187,7 +187,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Change Password
         [HttpPost]
         [Route(APIRoutes.User.ChangePassword)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ChangePassword")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult ChangePassword(
             [FromBody] Models.IDFUserRequestModels.ChangePassword model
            , [FromHeader] string userToken
@@ -240,7 +240,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Lock
         [HttpPost]
         [Route(APIRoutes.User.Lock)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Lock")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Details")]
         public IActionResult Lock(
             [FromBody] Models.IDFUserRequestModels.Lock model
            , [FromHeader] string userToken
@@ -266,7 +266,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Unlock
         [HttpPost]
         [Route(APIRoutes.User.Lock)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "Unlock")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult Unlock(
             [FromBody] Models.IDFUserRequestModels.Lock model
            , [FromHeader] string userToken
@@ -293,7 +293,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Get Roles
         [HttpPost]
         [Route(APIRoutes.User.GetRoles)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "GetRoles")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Create")]
         public IActionResult GetRoles(
             [FromBody] Models.IDFUserRequestModels.GetRoles model
            , [FromHeader] string userToken
@@ -319,7 +319,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Grant Role
         [HttpPost]
         [Route(APIRoutes.User.GrantRole)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "GrantRole")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult GrantRole(
             [FromBody] Models.IDFUserRequestModels.GrantRole model
            , [FromHeader] string userToken
@@ -345,7 +345,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Revoke Role
         [HttpPost]
         [Route(APIRoutes.User.RevokeRole)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "GrantRole")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult RevokeRole(
             [FromBody] Models.IDFUserRequestModels.RevokeRole model
            , [FromHeader] string userToken
@@ -372,7 +372,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Validate User Role
         [HttpPost]
         [Route(APIRoutes.User.ValidateUserRole)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ValidateUserRole")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult ValidateUserRole(
             [FromBody] Models.IDFUserRequestModels.ValidateUserRole model
            , [FromHeader] string userToken
@@ -399,7 +399,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Validate User Any Role
         [HttpPost]
         [Route(APIRoutes.User.ValidateUserAnyRole)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ValidateUserAnyRole")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Details")]
         public IActionResult ValidateUserAnyRole(
             [FromBody] Models.IDFUserRequestModels.ValidateUserAnyRole model
            , [FromHeader] string userToken
@@ -427,7 +427,7 @@ namespace CMouss.IdentityFramework.API.Serving
         #region Validate Token Role
         [HttpPost]
         [Route(APIRoutes.User.ValidateTokenRole)]
-        [IDFAuthUserWithRoleOrPermission("Administrators", "User", "ValidateTokenRole")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators", "User:Search")]
         public IActionResult ValidateTokenRole(
             [FromBody] Models.IDFUserRequestModels.ValidateTokenRole model
            , [FromHeader] string userToken

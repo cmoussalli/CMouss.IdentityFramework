@@ -11,21 +11,19 @@ using Newtonsoft.Json;
 namespace CMouss.IdentityFramework.API.Serving
 {
 
-    public class IDFAuthUserWithRoleAttribute : IDFBaseActionFilterAttribute
+    public class IDFAuthUserWithRolesAttribute : IDFBaseActionFilterAttribute
     {
 
-        private readonly string _roleId;
-
+        private readonly string _roleIds;
         /// <summary>
         /// Authenticate using User info only (UserToken). App authentication is not supported.
         /// Authorization is App based, multiple App is not supported with this function.
         /// Add "requesterAuthInfo" argument to controller action in order to get the AuthResult data.
         /// </summary>
-        /// <param name="roleId"></param>
-        public IDFAuthUserWithRoleAttribute(string roleId) =>
-            (_roleId) =
-            (roleId);
-
+        /// <param name="roleIds"></param>
+        public IDFAuthUserWithRolesAttribute(string roleIds) =>
+            (_roleIds) =
+            (roleIds);
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
@@ -36,7 +34,10 @@ namespace CMouss.IdentityFramework.API.Serving
                 ReturnSecurityFail(context, SecurityValidationResult.IncorrectParameters.ToString());
             }
 
-            AuthResult authResult = IDFManager.authService.AuthUserTokenWithRole(userToken.ToString(), _roleId);
+            List<string> roles = new();
+            _roleIds.Split(",").ToList().ForEach(r => roles.Add(r.Trim()));
+
+            AuthResult authResult = IDFManager.authService.AuthUserTokenWithRoles(userToken.ToString(), roles);
 
             if (authResult.SecurityValidationResult != SecurityValidationResult.Ok)
             {
@@ -46,8 +47,12 @@ namespace CMouss.IdentityFramework.API.Serving
             base.OnActionExecuting(context);
         }
 
-
-
-
     }
+
+
+
+
+
+
+
 }
