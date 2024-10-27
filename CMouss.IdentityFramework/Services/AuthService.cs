@@ -264,6 +264,7 @@ namespace CMouss.IdentityFramework
         public AuthResult AuthUserTokenWithRoles(string token, List<string> roleIds, TokenValidationMode tokenValidationMode)
         {
             AuthResult result = new();
+            roleIds = roleIds.Select(o => o.ToLower()).ToList();
             result.AuthenticationMode = IDFAuthenticationMode.User;
             bool validation = false;
 
@@ -280,7 +281,7 @@ namespace CMouss.IdentityFramework
                     List<Role> roles = Storage.Roles.Where(o => roleIds.Contains(o.Id.ToLower())).ToList();
                     if (roles.Count == 0)
                     {
-                        result.SecurityValidationResult = SecurityValidationResult.IncorrectToken;
+                        result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;
                         return result;
                     }
                     result = claim.ToAuthResult();
@@ -531,6 +532,8 @@ namespace CMouss.IdentityFramework
         public AuthResult AuthUserTokenWithPermissionsOrRoles(string token, List<EntityPermission> entityPermissions, List<string> roleIds, TokenValidationMode tokenValidationMode)
         {
             AuthResult result = new();
+            roleIds = roleIds.Select(o => o.ToLower()).ToList();
+
             bool validationPassed = false;
             result.AuthenticationMode = IDFAuthenticationMode.User;
             if (entityPermissions.Count == 0 && roleIds.Count == 0)
@@ -541,7 +544,7 @@ namespace CMouss.IdentityFramework
 
             UserClaim claim = Helpers.DecryptUserToken(token);
             List<Permission> userPermissions = Helpers.GetRolesPermissions(claim.Roles);
-            List<Role> userRoles = Storage.Roles.Where(o => claim.Roles.Contains(o.Id.ToLower())).ToList();
+            List<Role> userRoles = Storage.Roles.Where(o => claim.Roles.Select(s => s.ToLower()).Contains(o.Id.ToLower())).ToList();
 
 
             result.SecurityValidationResult = SecurityValidationResult.UnAuthorized;

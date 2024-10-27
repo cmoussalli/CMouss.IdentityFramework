@@ -95,22 +95,19 @@ namespace CMouss.IdentityFramework.APIServer.Controllers
             return Ok(claim);
         }
 
-        //[HttpPost]
-        //[Route("api/test/UserWithRolesOrPermission")]
-        //[IDFAuthUserWithRoleOrPermission( )]
-        //public async Task<IActionResult> TestAuthUserWithRolesOrPermission(
-        //    [FromHeader] string userToken
-        //    , string requesterAuthInfo)
-        //{
-        //    AuthResult r = JsonConvert.DeserializeObject<AuthResult>(requesterAuthInfo);
-        //    return Ok(ConvertAuthResultToShortString(r) + Environment.NewLine
-        //        + "RequesterAuthInfo:" + Environment.NewLine + requesterAuthInfo);
-        //}
+        [HttpPost]
+        [Route("api/test/UserWithRolesOrPermissions")]
+        [IDFAuthUserWithRolesOrPermissions("Administrators,Role2","Users:Search ,Users:Details")]
+        public async Task<IActionResult> TestAuthUserWithRolesOrPermission()
+        {
+            UserClaim claim = GetUserClaim();
+            return Ok(claim);
+        }
 
 
-        //public string ConvertAuthResultToShortString(AuthResult authResult)
-        //{
-        //    return $"Auth Test:{Environment.NewLine}AuthMode: {authResult.AuthenticationMode.ToString()}, UserId: {authResult.UserToken.User.Id}, UserName: {authResult.UserToken.User.UserName}";
-        //}
+        public string ConvertAuthResultToShortString(AuthResult authResult)
+        {
+            return $"Auth Test:{Environment.NewLine}AuthMode: {authResult.AuthenticationMode.ToString()}, UserId: {authResult.UserToken.User.Id}, UserName: {authResult.UserToken.User.UserName}";
+        }
     }
 }
