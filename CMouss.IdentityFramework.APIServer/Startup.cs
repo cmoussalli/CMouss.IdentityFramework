@@ -82,7 +82,6 @@ namespace CMouss.IdentityFramework.APIServer
                 TokenValidationMode = TokenValidationMode.DecryptOnly
             }); 
 
-            IDFDBContext db = new IDFDBContext();
 
         }
 

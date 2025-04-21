@@ -269,12 +269,7 @@ namespace CMouss.IdentityFramework
             tokenEncryptionKey = config.TokenEncryptionKey;
             tokenValidationMode = config.TokenValidationMode;
 
-            if (dBLifeCycle != DBLifeCycle.OnRequestOnly)
-            {
-                //Create Static Context
-                IDFDBContext = new IDFDBContext();
 
-            }
 
 
             //////Add Default Records
@@ -295,10 +290,7 @@ namespace CMouss.IdentityFramework
             //    UserServices.GrantRole(adminUserID, administratorRoleId);
 
             //}
-            IDFDBContext = new IDFDBContext();
-            IDFDBContext.Database.EnsureCreated();
-            IDFDBContext.InsertMasterData();
-            RefreshStorage();
+
         }
 
 
@@ -321,14 +313,14 @@ namespace CMouss.IdentityFramework
             }
         }
 
-        public static void RefreshStorage()
+        public static void RefreshIDFStorage()
         {
             roleService.GetAll();
             permissionService.GetAll();
         }
 
 
-        public static void RefreshDBContext()
+        public static void RefreshIDFDBContext()
         {
             IDFDBContext = new IDFDBContext();
             RefreshDBContext_MasterData();
