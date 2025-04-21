@@ -83,8 +83,6 @@ namespace CMouss.IdentityFramework.APIServer
             }); 
 
             IDFDBContext db = new IDFDBContext();
-            db.Database.EnsureCreated();
-            db.InsertMasterData();
 
         }
 

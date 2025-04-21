@@ -296,7 +296,8 @@ namespace CMouss.IdentityFramework
 
             //}
             IDFDBContext = new IDFDBContext();
-
+            IDFDBContext.Database.EnsureCreated();
+            IDFDBContext.InsertMasterData();
             RefreshStorage();
         }
 
