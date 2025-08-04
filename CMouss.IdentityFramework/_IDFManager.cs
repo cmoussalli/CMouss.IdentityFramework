@@ -269,8 +269,8 @@ namespace CMouss.IdentityFramework
             tokenEncryptionKey = config.TokenEncryptionKey;
             tokenValidationMode = config.TokenValidationMode;
 
-
-
+            IDFDBContext = new IDFDBContext();
+            RefreshIDFStorage();
 
             //////Add Default Records
             ////Create Administrator Role
@@ -331,6 +331,9 @@ namespace CMouss.IdentityFramework
             IDFManager.Context.Roles.ToList();
             IDFManager.Context.Entities.ToList();
             IDFManager.Context.PermissionTypes.ToList();
+
+
+            RefreshIDFStorage();
         }
 
 
