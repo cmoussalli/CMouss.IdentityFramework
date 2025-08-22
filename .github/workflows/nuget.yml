@@ -26,7 +26,7 @@ jobs:
       - name: 'Build project'
         run: dotnet build CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj --no-restore
       - name: 'Build project'
-        run: dotnet build CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj --no-restore
+        run: dotnet build CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj
       
       - name: 'Pack project'
         run: dotnet pack CMouss.IdentityFramework/CMouss.IdentityFramework.csproj --no-restore --no-build --configuration Debug --output output
@@ -38,7 +38,7 @@ jobs:
         run: dotnet pack CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj --no-restore --no-build --configuration Debug --output output
 
       - name: 'Pack project'
-        run: dotnet pack CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj --no-build --configuration Debug --output output
+        run: dotnet pack CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj --no-restore --no-build --configuration Debug --output output
 
       - name: "Push package"
         run: dotnet nuget push output\*.nupkg -k ${{ secrets.NUGETKEY }} -s https://api.nuget.org/v3/index.json
