@@ -28,4 +28,4 @@ jobs:
       - name: 'Build project'
         run: dotnet build CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj --no-restore
       - name: 'Build project'
-        run: dotnet build CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj --no-restore
+        run: dotnet build CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj
