@@ -1,0 +1,70 @@
+using BlazorUIDemo.Components;
+using BlazorUIDemo.Models;
+using CMouss.IdentityFramework;
+using CMouss.IdentityFramework.BlazorUI;
+using Microsoft.AspNetCore.Routing;
+
+namespace BlazorUIDemo
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Add services to the container.
+            builder.Services.AddRazorComponents()
+                .AddInteractiveServerComponents();
+
+
+
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseAntiforgery();
+
+            app.MapStaticAssets();
+            app.MapRazorComponents<Components.App>()
+                .AddInteractiveServerRenderMode()
+                .AddAdditionalAssemblies(typeof(CMouss.IdentityFramework.BlazorUI.AssemblyMarker).Assembly);
+
+            IDFManager.Configure(new IDFManagerConfig
+            {
+                DatabaseType = DatabaseType.SQLite,
+                DBConnectionString = "Data Source=database.db;",
+                DefaultListPageSize = 25,
+                DBLifeCycle = DBLifeCycle.Both,
+                IsActiveByDefault = true,
+                IsLockedByDefault = false,
+                DefaultTokenLifeTime = new LifeTime(365, 0, 0),
+                AllowUserMultipleSessions = false,
+                TokenEncryptionKey = "123456",
+                AdministratorUserName = "admin",
+                AdministratorPassword = "admin",
+                AdministratorRoleName = "Administrators",
+                TokenValidationMode = TokenValidationMode.DecryptOnly
+
+            });
+            DemoDBContext db = new();
+            db.Database.EnsureCreated();
+            db.InsertMasterData();
+            IDFManager.RefreshIDFStorage();
+
+
+            IDFBlazorUIConfig.AuthHomeURL = "/weather";
+
+
+
+            app.Run();
+        }
+    }
+}

@@ -45,7 +45,6 @@ namespace CMouss.IdentityFramework
 
         public DbSet<UserToken> UserTokens { get; set; }
 
-        //public DbSet<RoleUser> RoleUser { get; set; }
 
         public void InsertMasterData()
         {

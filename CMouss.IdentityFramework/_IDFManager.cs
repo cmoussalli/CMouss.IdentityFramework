@@ -270,7 +270,7 @@ namespace CMouss.IdentityFramework
             tokenValidationMode = config.TokenValidationMode;
 
             IDFDBContext = new IDFDBContext();
-            RefreshIDFStorage();
+            //RefreshIDFStorage();
 
             //////Add Default Records
             ////Create Administrator Role

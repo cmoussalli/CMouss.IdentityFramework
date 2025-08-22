@@ -1,0 +1,122 @@
+﻿@rendermode InteractiveServer
+
+@using CMouss.IdentityFramework;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.Components.Sections
+
+@inject NavigationManager NavManager
+@inject ProtectedLocalStorage BrowserStorage
+
+
+
+<form class="form-horizontal" @onsubmit:preventDefault>
+
+    <div class="mb-3">
+        <label for="useremail" class="form-label">Email</label>
+        <InputText @bind-Value="email" class="form-control" />
+        <div class="invalid-feedback">
+            Please Enter Email
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="fullName" class="form-label">Full Name</label>
+        <InputText @bind-Value="fullName" class="form-control" />
+        <div class="invalid-feedback">
+            Please Enter FullName
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="username" class="form-label">User Name</label>
+        <InputText @bind-Value="userName" class="form-control" />
+        <div class="invalid-feedback">
+            Please Enter Username
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="userpassword" class="form-label">Password</label>
+        <InputText @bind-Value="password" type="password" class="form-control" placeholder="Password" />
+        <div class="invalid-feedback">
+            Please Enter Password
+        </div>
+    </div>
+
+    <div class="mt-4 d-grid">
+        <button type="button" class="btn btn-primary waves-effect waves-light" @onclick="CreateUser">@IDFBlazorUIConfig.FormLabels.SignupButton</button>
+    </div>
+
+    @if (errors.Count > 0)
+    {
+        <div class="alert alert-danger mt-3">
+            <ul>
+                @foreach (var error in errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    
+</form>
+
+
+
+
+
+
+
+
+@code {
+
+
+    [CascadingParameter] public AuthLayoutModel authLayoutModel { get; set; } = new();
+
+
+    bool success;
+    string systemMessage;
+    List<string> errors = new();
+
+    public bool IsLoading_Signup { get; set; }
+
+    string userName;
+    string fullName;
+    string email;
+    string password;
+
+    public bool HasMetaMask { get; set; }
+    public bool IsSiteConnected { get; set; }
+    public string ConnectedWallet { get; set; }
+
+
+
+    private async Task CreateUser()
+    {
+        IsLoading_Signup = true;
+        StateHasChanged();
+        string newUserID = Guid.NewGuid().ToString();
+        try
+        {
+            string res = IDFManager.userService.Create(userName, password, fullName, email, false, false);
+            CMouss.IdentityFramework.User usr = IDFManager.userService.Details(res);
+            systemMessage = "Your account is ready, please login";
+            NavManager.NavigateTo(IDFBlazorUIConfig.SignupRedirectURL, true);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            systemMessage = ex.Message;
+            IsLoading_Signup = false;
+            StateHasChanged();
+        }
+
+
+    }
+
+
+
+
+
+}

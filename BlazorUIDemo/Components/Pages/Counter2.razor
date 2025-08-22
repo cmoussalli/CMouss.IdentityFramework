@@ -1,0 +1,30 @@
+﻿@page "/counter2"
+@layout MainLayoutAuth
+
+
+@inject NavigationManager NavManager
+
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary" @onclick="Logout">Logout</button>
+
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+    private void Logout()
+    {
+        NavManager.NavigateTo("/logout", true);
+    }
+
+}

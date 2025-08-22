@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
         with: 
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
       - run: dotnet clean
       - name: 'Restore packages'
         run: dotnet restore CMouss.IdentityFramework/CMouss.IdentityFramework.csproj
@@ -27,3 +27,5 @@ jobs:
         run: dotnet restore CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj
       - name: 'Build project'
         run: dotnet build CMouss.IdentityFramework.API.Serving/CMouss.IdentityFramework.API.Serving.csproj --no-restore
+      - name: 'Build project'
+        run: dotnet build CMouss.IdentityFramework.BlazorUI/CMouss.IdentityFramework.BlazorUI.csproj --no-restore

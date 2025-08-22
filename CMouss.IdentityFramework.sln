@@ -17,6 +17,10 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CMouss.IdentityFramework.Sh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.Client", "CMouss.IdentityFramework.Client\CMouss.IdentityFramework.Client.csproj", "{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorUIDemo", "BlazorUIDemo\BlazorUIDemo.csproj", "{0E5EEF40-7F1D-44EF-BC22-57ED5D8EA582}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.BlazorUI", "CMouss.IdentityFramework.BlazorUI\CMouss.IdentityFramework.BlazorUI.csproj", "{DD85C5DE-747A-4745-9512-4709911D1C24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +51,14 @@ Global
 		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBA6813C-65FB-45B1-9897-BEEE3BB1BB8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E5EEF40-7F1D-44EF-BC22-57ED5D8EA582}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E5EEF40-7F1D-44EF-BC22-57ED5D8EA582}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E5EEF40-7F1D-44EF-BC22-57ED5D8EA582}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E5EEF40-7F1D-44EF-BC22-57ED5D8EA582}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD85C5DE-747A-4745-9512-4709911D1C24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD85C5DE-747A-4745-9512-4709911D1C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD85C5DE-747A-4745-9512-4709911D1C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD85C5DE-747A-4745-9512-4709911D1C24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

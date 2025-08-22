@@ -1,0 +1,121 @@
+﻿@rendermode InteractiveServer
+
+@using CMouss.IdentityFramework;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.Components.Sections
+
+@inject NavigationManager NavManager
+@inject ProtectedLocalStorage BrowserStorage
+
+
+
+<form class="form-horizontal" @onsubmit:preventDefault>
+    <div class="mb-3">
+        <label for="username" class="form-label">@IDFBlazorUIConfig.FormLabels.UserName</label>
+        <InputText @bind-Value="userName" class="form-control form-control-lg" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">@IDFBlazorUIConfig.FormLabels.Password</label>
+        <div class="input-group auth-pass-inputgroup">
+            <InputText @bind-Value="password" type="password" class="form-control form-control-lg" />
+            <button class="btn btn-light" type="button" id="password-addon"><i class="mdi mdi-eye-outline"></i></button>
+        </div>
+    </div>
+
+    <div class="mt-4 d-grid">
+        <!-- make it an explicit button, not submit -->
+        <button type="button" class="btn btn-primary waves-effect waves-light" @onclick="LoginUser" disabled="@(IsLoading_Login)">
+            @IDFBlazorUIConfig.FormLabels.LoginButton
+        </button>
+    </div>
+
+    @if (errors.Count > 0)
+    {
+        <div class="alert alert-danger mt-3">
+            <ul>
+                @foreach (var error in errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+
+</form>
+
+
+
+
+
+
+
+
+@code {
+
+
+    [CascadingParameter] public AuthLayoutModel authLayoutModel { get; set; } = new();
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+
+    bool success;
+    List<string> errors = new();
+
+    public bool IsLoading_Login { get; set; }
+
+    string userName;
+    string password;
+
+    public bool HasMetaMask { get; set; }
+    public bool IsSiteConnected { get; set; }
+    public string ConnectedWallet { get; set; }
+
+    private async Task LoginUser()
+    {
+        errors = new();
+        IsLoading_Login = true;
+        StateHasChanged();
+
+        string newUserID = Guid.NewGuid().ToString();
+        try
+        {
+
+            AuthResult authResult = IDFManager.authService.AuthUserLogin(userName, password);
+            if (authResult.SecurityValidationResult != SecurityValidationResult.Ok)
+            {
+                errors.Add(authResult.SecurityValidationResult.ToString());
+            }
+            else
+            {
+
+                authLayoutModel.User = authResult.UserToken.User;
+                authLayoutModel.IsAuthenticated = true;
+                try
+                {
+                    await BrowserStorage.DeleteAsync("token");
+                }
+                catch (Exception ex) { }
+                await BrowserStorage.SetAsync("token", authResult.UserToken.Token);
+                string redirectTo = ReturnUrl ?? IDFBlazorUIConfig.AuthHomeURL;
+                NavManager.NavigateTo(redirectTo, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            errors.Add(ex.Message);
+        }
+
+        IsLoading_Login = false;
+        StateHasChanged();
+
+    }
+
+
+
+
+
+}

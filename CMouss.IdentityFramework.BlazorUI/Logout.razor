@@ -1,0 +1,42 @@
+﻿@page "/logout"
+@layout AuthEmptyLayout
+
+@using CMouss.IdentityFramework;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.Components.Sections
+
+@inject NavigationManager NavManager
+@inject ProtectedLocalStorage BrowserStorage
+
+
+<PageTitle>Logout</PageTitle>
+
+<span>Logging out...</span>
+
+@code {
+    // protected override void OnInitialized()
+    // {
+    //     LogoutUser();
+    // }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        // This will ensure that the logout process is initiated only once when the component is first rendered.
+        LogoutUser();
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void LogoutUser()
+    {
+        try
+        {
+            BrowserStorage.DeleteAsync("token");
+            StateHasChanged();
+
+        }
+        catch (Exception ex) { }
+        NavManager.NavigateTo(IDFBlazorUIConfig.AfterLogoutRedirectURL);
+    }
+}
