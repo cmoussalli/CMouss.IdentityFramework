@@ -8,7 +8,9 @@
 {
     if (authLayoutModel.User is not null)
     {
-        @ChildContent
+        <CascadingValue Value="authLayoutModel">
+            @ChildContent
+        </CascadingValue>
 
     }
 }
@@ -78,7 +80,7 @@
         authLayoutModel.User = null;
         BrowserStorage.DeleteAsync("token");
         StateHasChanged();
-        NavManager.NavigateTo($"{IDFBlazorUIConfig.LoginRedirectURL}?returnurl={NavManager.ToAbsoluteUri(NavManager.Uri).PathAndQuery}" , true);
+        NavManager.NavigateTo($"{IDFBlazorUIConfig.LoginRedirectURL}?returnurl={NavManager.ToAbsoluteUri(NavManager.Uri).PathAndQuery}", true);
     }
 
 
