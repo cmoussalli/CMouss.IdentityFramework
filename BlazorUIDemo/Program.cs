@@ -53,6 +53,21 @@ namespace BlazorUIDemo
                 AdministratorRoleName = "Administrators",
                 TokenValidationMode = TokenValidationMode.DecryptOnly
 
+                ,
+                AuthenticationBackend = AuthenticationBackend.LDAP
+                    ,
+                AD_LDAP = "LDAP://10.38.38.71"
+                    ,
+                AD_Domain = "sme.gov.om"
+                    ,
+                AD_User = "12345678"
+                    ,
+                AD_Password = "12345678"
+                    ,
+                AD_UseSSL = false
+                    ,
+                AD_BaseDN = "DC=sme,DC=gov,DC=om"
+
             });
             DemoDBContext db = new();
             db.Database.EnsureCreated();

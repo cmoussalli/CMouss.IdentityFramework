@@ -1,4 +1,5 @@
 ﻿
+using CMouss.LDAPConnector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace CMouss.IdentityFramework
 
     #region IDFManager Models & Enums
 
-    
+
     public class UserSession
     {
         public string UserId { get; set; }
@@ -69,6 +70,12 @@ namespace CMouss.IdentityFramework
         }
     }
 
+    public enum AuthenticationBackend
+    {
+        Database = 1,
+        LDAP = 2
+    }
+
     #endregion
 
     public partial class IDFManagerConfig
@@ -94,9 +101,28 @@ namespace CMouss.IdentityFramework
 
         public TokenValidationMode TokenValidationMode { get; set; } = TokenValidationMode.DecryptOnly;
 
+        public AuthenticationBackend AuthenticationBackend { get; set; } = AuthenticationBackend.Database;
+
+        public string AD_LDAP { get; set; }
+        public string AD_Domain { get; set; }
+        public string AD_User { get; set; }
+        public string AD_Password { get; set; }
+        public bool AD_UseSSL { get; set; }
+        public string AD_BaseDN { get; set; }
 
 
 
+        public IDFManagerConfig UseLDAPAuthentication(string ldapServer, string domain, string user, string password, bool useSSL, string baseDN)
+        {
+            AuthenticationBackend = AuthenticationBackend.LDAP;
+            AD_LDAP = ldapServer;
+            AD_Domain = domain;
+            AD_User = user;
+            AD_Password = password;
+            AD_UseSSL = useSSL;
+            AD_BaseDN = baseDN;
+            return this;
+        }
     }
 
     public static partial class IDFManager
@@ -209,6 +235,36 @@ namespace CMouss.IdentityFramework
         public static TokenValidationMode TokenValidationMode { get { return tokenValidationMode; } }
 
 
+        static AuthenticationBackend authenticationBackend;
+        public static AuthenticationBackend AuthenticationBackend { get { return authenticationBackend; } }
+
+
+        static string lDAP_AD;
+        public static string LDAP_AD_Server { get { return lDAP_AD; } }
+
+
+        static string lDAP_AD_Domain;
+        public static string LDAP_AD_Domain_Name { get { return lDAP_AD_Domain; } }
+
+
+        static string lDAP_AD_User;
+        public static string LDAP_AD_User_Name { get { return lDAP_AD_User; } }
+
+
+        static string lDAP_AD_Password;
+        public static string LDAP_AD_Password { get { return lDAP_AD_Password; } }
+
+
+        static bool lDAP_AD_UseSSL;
+        public static bool LDAP_AD_UseSSL { get { return lDAP_AD_UseSSL; } }
+
+
+        static string lDAP_AD_BaseDN;
+        public static string LDAP_AD_BaseDN { get { return lDAP_AD_BaseDN; } }
+
+
+
+
         static IDFDBContext IDFDBContext;
         public static IDFDBContext Context
         {
@@ -246,7 +302,7 @@ namespace CMouss.IdentityFramework
                 throw new Exception("TokenValidationMode is not set");
             }
 
-            if(config.AllowUserMultipleSessions == false && TokenValidationMode == TokenValidationMode.DecryptOnly)
+            if (config.AllowUserMultipleSessions == false && TokenValidationMode == TokenValidationMode.DecryptOnly)
             {
                 throw new Exception("You can't set AllowUserMultipleSessions to false when TokenValidationMode is set to DecryptOnly");
             }
@@ -268,6 +324,20 @@ namespace CMouss.IdentityFramework
 
             tokenEncryptionKey = config.TokenEncryptionKey;
             tokenValidationMode = config.TokenValidationMode;
+
+            authenticationBackend = config.AuthenticationBackend;
+            if (authenticationBackend == AuthenticationBackend.LDAP)
+            {
+                lDAP_AD = config.AD_LDAP;
+                lDAP_AD_Domain = config.AD_Domain;
+                lDAP_AD_User = config.AD_User;
+                lDAP_AD_Password = config.AD_Password;
+                lDAP_AD_UseSSL = config.AD_UseSSL;
+                lDAP_AD_BaseDN = config.AD_BaseDN;
+            }
+
+            ADConnectorFactory.Config = new ADConnectionConfig(lDAP_AD, lDAP_AD_Domain, lDAP_AD_User, lDAP_AD_Password, lDAP_AD_UseSSL, lDAP_AD_BaseDN);
+
 
             IDFDBContext = new IDFDBContext();
             //RefreshIDFStorage();

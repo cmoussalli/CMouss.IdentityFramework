@@ -80,6 +80,9 @@ namespace CMouss.IdentityFramework.APIServer
                 AllowUserMultipleSessions = true,
                 TokenEncryptionKey = "123456",
                 TokenValidationMode = TokenValidationMode.DecryptOnly
+
+
+                
             }); 
 
             IDFDBContext db = new IDFDBContext();

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CMouss.LDAPConnector;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 namespace CMouss.IdentityFramework
@@ -22,16 +23,48 @@ namespace CMouss.IdentityFramework
         {
             AuthResult result = new();
             List<Role> roles = IDFManager.Context.Roles.ToList();
+            string fullName = "";
+
 
             UserToken t = new UserToken();
             List<User> users = IDFManager.Context.Users
                 .Include(o => o.Apps).Include(o => o.Roles)
                 .Where(o => o.UserName.ToLower() == user.ToLower() && o.IsDeleted == false).ToList();
-            if (users == null)
+            if (users == null || users.Count == 0)
             {
-                result.AuthenticationMode = IDFAuthenticationMode.User;
-                result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
-                return result;
+                if (!IDFManager.IsActiveByDefault)
+                {
+                    result.AuthenticationMode = IDFAuthenticationMode.User;
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
+                    return result;
+                }
+
+                //Validate if User not exist in database but exists in LDAP
+                AdUser adUser = ADConnectorFactory.CreateConnector().GetUserByUsername(user);
+                if (adUser != null)
+                {
+
+                    //Valida AD user info
+                    if (
+                        !adUser.IsEnabled
+                        || (string.IsNullOrEmpty(adUser.FirstName) && string.IsNullOrEmpty(adUser.LastName))
+                        //|| (string.IsNullOrEmpty(adUser.Email))
+                        )
+
+                    {
+                        result.AuthenticationMode = IDFAuthenticationMode.User;
+                        result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
+                        return result;
+                    }
+
+                    fullName = string.Join(" ", new[] { adUser.FirstName, adUser.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    //User exists in LDAP but not in Database, must be imported to database
+                    IDFManager.userService.Create(user, password, fullName, adUser.Email);
+                    users = IDFManager.Context.Users
+                        .Include(o => o.Apps).Include(o => o.Roles)
+                        .Where(o => o.UserName.ToLower() == user.ToLower() && o.IsDeleted == false).ToList();
+                }
+
             }
             if (users.Count == 0)
             {
@@ -41,14 +74,66 @@ namespace CMouss.IdentityFramework
                 return result;
             }
 
+
+            //////////////////////////////////////////
+            //////////////////////////////////////////
             //Validate password
-            if (password != Helpers.Decrypt(users[0].Password, users[0].PrivateKey))
+
+            bool isAuthenticated = false;
+            string usedAuthenticationBackend;
+
+            //Database Authentication
+            if (IDFManager.AuthenticationBackend == AuthenticationBackend.Database) //Database Login
+            {
+                if (password == Helpers.Decrypt(users[0].Password, users[0].PrivateKey))
+                {
+                    isAuthenticated = true;
+                    usedAuthenticationBackend = "Database";
+                }
+            }
+
+            //LADP Authentication
+            if (IDFManager.AuthenticationBackend == AuthenticationBackend.LDAP) //LDAP Login
+            {
+                ADConnector ad = ADConnectorFactory.CreateConnector();
+                if (ad.AuthenticateUser(user, password))
+                {
+                    isAuthenticated = true;
+                    usedAuthenticationBackend = "LDAP";
+                    AdUser aduser = ad.GetUserByUsername(user);
+                    //Update user info in database
+                    fullName = string.Join(" ", new[] { aduser.FirstName, aduser.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    IDFManager.userService.ChangePassword(users[0].Id, password, false);
+
+                    if (
+                        fullName != string.Join(" ", new[] { aduser.FirstName, aduser.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                        || aduser.Email != users[0].Email
+
+                        )
+                    {
+                        IDFManager.userService.Update(users[0].Id, fullName, aduser.Email, false, true);
+
+                    }
+
+                }
+            }
+
+
+
+
+            if (!isAuthenticated)
             {
                 //throw new Exception(Messages.IncorrectPassword);
                 result.AuthenticationMode = IDFAuthenticationMode.User;
                 result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
                 return result;
             }
+
+            //if authentication used LDAP, validate if user exists in database
+
+
+            ////////////////////////////////////////////
+            /////////////////////////////////////////////
 
             t = IDFManager.userTokenService.Create(users[0].Id, ipAddress);
             IDFManager.UserSessionsManager.AddOrUpdate(users[0].Id, ipAddress);
