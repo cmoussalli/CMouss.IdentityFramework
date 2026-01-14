@@ -1,11 +1,11 @@
 ﻿@rendermode InteractiveServer
 
 @using CMouss.IdentityFramework;
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using CMouss.IdentityFramework.BlazorUI;
 @using Microsoft.AspNetCore.Components.Sections
 
 @inject NavigationManager NavManager
-@inject ProtectedLocalStorage BrowserStorage
+@inject CookieAuthService CookieAuth
 
 
 
@@ -80,10 +80,25 @@
         IsLoading_Login = true;
         StateHasChanged();
 
-        string newUserID = Guid.NewGuid().ToString();
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            errors.Add("Username is required");
+        }
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errors.Add("Password is required");
+        }
+
+        if (errors.Count > 0)
+        {
+            IsLoading_Login = false;
+            StateHasChanged();
+            return;
+        }
+
         try
         {
-
             AuthResult authResult = IDFManager.authService.AuthUserLogin(userName, password);
             if (authResult.SecurityValidationResult != SecurityValidationResult.Ok)
             {
@@ -91,15 +106,12 @@
             }
             else
             {
-
                 authLayoutModel.User = authResult.UserToken.User;
                 authLayoutModel.IsAuthenticated = true;
-                try
-                {
-                    await BrowserStorage.DeleteAsync("token");
-                }
-                catch (Exception ex) { }
-                await BrowserStorage.SetAsync("token", authResult.UserToken.Token);
+
+                // Store authentication token in cookie
+                await CookieAuth.SetTokenAsync(authResult.UserToken.Token);
+
                 string redirectTo = ReturnUrl ?? IDFBlazorUIConfig.AuthHomeURL;
                 NavManager.NavigateTo(redirectTo, true);
             }

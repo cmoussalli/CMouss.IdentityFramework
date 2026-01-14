@@ -1,11 +1,9 @@
 ﻿@rendermode InteractiveServer
 
 @using CMouss.IdentityFramework;
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.Components.Sections
 
 @inject NavigationManager NavManager
-@inject ProtectedLocalStorage BrowserStorage
 
 
 
@@ -94,25 +92,73 @@
 
     private async Task CreateUser()
     {
+        errors = new();
         IsLoading_Signup = true;
         StateHasChanged();
-        string newUserID = Guid.NewGuid().ToString();
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            errors.Add("Email is required");
+        }
+        else if (!IsValidEmail(email))
+        {
+            errors.Add("Please enter a valid email address");
+        }
+
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            errors.Add("Full name is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            errors.Add("Username is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errors.Add("Password is required");
+        }
+        else if (password.Length < 6)
+        {
+            errors.Add("Password must be at least 6 characters long");
+        }
+
+        if (errors.Count > 0)
+        {
+            IsLoading_Signup = false;
+            StateHasChanged();
+            return;
+        }
+
         try
         {
             string res = IDFManager.userService.Create(userName, password, fullName, email, false, false);
             CMouss.IdentityFramework.User usr = IDFManager.userService.Details(res);
             systemMessage = "Your account is ready, please login";
             NavManager.NavigateTo(IDFBlazorUIConfig.SignupRedirectURL, true);
-            StateHasChanged();
         }
         catch (Exception ex)
         {
+            errors.Add(ex.Message);
             systemMessage = ex.Message;
             IsLoading_Signup = false;
             StateHasChanged();
         }
+    }
 
-
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
 

@@ -16,7 +16,8 @@ namespace BlazorUIDemo
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-
+            // Register Identity Framework BlazorUI services
+            builder.Services.AddIdentityFrameworkBlazorUI();
 
             var app = builder.Build();
 
@@ -51,7 +52,22 @@ namespace BlazorUIDemo
                 AdministratorUserName = "admin",
                 AdministratorPassword = "admin",
                 AdministratorRoleName = "Administrators",
-                TokenValidationMode = TokenValidationMode.DecryptOnly
+                TokenValidationMode = TokenValidationMode.DecryptOnly,
+                AuthenticationBackend = AuthenticationBackend.Database
+                //         ,
+                //     AuthenticationBackend = AuthenticationBackend.LDAP
+                //,
+                //     AD_LDAP = "LDAP://10.38.38.71"
+                //,
+                //     AD_Domain = "sme.gov.om"
+                //,
+                //     AD_User = "12345678"
+                //,
+                //     AD_Password = "12345678"
+                //,
+                //     AD_UseSSL = false
+                //,
+                //     AD_BaseDN = "DC=sme,DC=gov,DC=om"
 
 
 

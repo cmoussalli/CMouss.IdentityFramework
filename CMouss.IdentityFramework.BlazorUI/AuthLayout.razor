@@ -1,7 +1,7 @@
 ﻿@using CMouss.IdentityFramework
+@using CMouss.IdentityFramework.BlazorUI
 
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@inject ProtectedLocalStorage BrowserStorage
+@inject CookieAuthService CookieAuth
 @inject NavigationManager NavManager
 
 @if (authLayoutModel is not null)
@@ -42,14 +42,14 @@
     {
         try
         {
-            var result = await BrowserStorage.GetAsync<string>("token");
+            var token = await CookieAuth.GetTokenAsync();
             authLayoutModel = new();
-            if (result.Success && result.Value.Length > 10)
+            if (!string.IsNullOrEmpty(token) && token.Length > 10)
             {
-                UserToken userToken = IDFManager.userTokenService.Validate(result.Value, TokenValidationMode.UseDefault);
+                UserToken userToken = IDFManager.userTokenService.Validate(token, TokenValidationMode.UseDefault);
                 if (userToken == null)
                 {
-                    RedirectToLogin();
+                    await RedirectToLogin();
                 }
                 else
                 {
@@ -61,24 +61,24 @@
             }
             else
             {
-                RedirectToLogin();
+                await RedirectToLogin();
             }
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            RedirectToLogin();
+            await RedirectToLogin();
         }
 
     }
 
-    public void RedirectToLogin()
+    public async Task RedirectToLogin()
     {
         authLayoutModel = new();
         authLayoutModel.IsAuthenticated = false;
         authLayoutModel.Token = "";
         authLayoutModel.User = null;
-        BrowserStorage.DeleteAsync("token");
+        await CookieAuth.DeleteTokenAsync();
         StateHasChanged();
         NavManager.NavigateTo($"{IDFBlazorUIConfig.LoginRedirectURL}?returnurl={NavManager.ToAbsoluteUri(NavManager.Uri).PathAndQuery}", true);
     }
