@@ -11,19 +11,22 @@ using System.Threading.Tasks;
 namespace CMouss.IdentityFramework
 {
 
-    [Table("RoleUser")]
+    [Table("RoleUsers")]
     [PrimaryKey(nameof(RoleId), nameof(UserId))]
     public class RoleUser
     {
         //[Key]
         //public long Id { get; set; }
 
+        [Column("RoleId")]
         [StringLength(450)]
         [ForeignKey(nameof(Role))]
         public string RoleId { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public virtual Role Role { get; set; }
 
+
+        [Column("UserId")]
         [StringLength(450)]
         [ForeignKey(nameof(User))]
         public string UserId { get; set; }

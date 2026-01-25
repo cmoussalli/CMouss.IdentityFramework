@@ -20,9 +20,38 @@ namespace CMouss.IdentityFramework
             {
                 options.UseSqlServer(IDFManager.ConnectionString);//"Data Source=App_Data/OpenWaaS.db");
             }
+        }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            ConfigureIdentityFrameworkModel(modelBuilder);
+        }
 
-
+        /// <summary>
+        /// Configures the Identity Framework model relationships.
+        /// Called automatically from OnModelCreating.
+        /// If you override OnModelCreating in a derived class, call base.OnModelCreating(modelBuilder) to preserve this configuration.
+        /// </summary>
+        protected virtual void ConfigureIdentityFrameworkModel(ModelBuilder modelBuilder)
+        {
+            // Explicitly configure the many-to-many relationship between User and Role
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Roles)
+                .WithMany(r => r.Users)
+                .UsingEntity<RoleUser>(
+                    j => j.HasOne(ru => ru.Role)
+                          .WithMany()
+                          .HasForeignKey(ru => ru.RoleId),
+                    j => j.HasOne(ru => ru.User)
+                          .WithMany()
+                          .HasForeignKey(ru => ru.UserId),
+                    j =>
+                    {
+                        j.ToTable("RoleUsers");
+                        j.HasKey(ru => new { ru.RoleId, ru.UserId });
+                    }
+                );
         }
 
 
@@ -33,7 +62,7 @@ namespace CMouss.IdentityFramework
         public DbSet<AppPermissionType> AppPermissionTypes { get; set; }
         public DbSet<AppAccessPermission> AppAccessPermissions { get; set; }
 
-        //public DbSet<RoleUser> RoleUser { get; set; }
+        public DbSet<RoleUser> RoleUsers { get; set; }
 
         public DbSet<PermissionType> PermissionTypes { get; set; }
         public DbSet<Entity> Entities { get; set; }
