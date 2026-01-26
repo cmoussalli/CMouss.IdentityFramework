@@ -39,6 +39,13 @@ namespace CMouss.IdentityFramework
                     return result;
                 }
 
+                if(IDFManager.AuthenticationBackend == AuthenticationBackend.Database)
+                {
+                    result.AuthenticationMode = IDFAuthenticationMode.User;
+                    result.SecurityValidationResult = SecurityValidationResult.IncorrectCredentials;
+                    return result;
+                }
+
                 //Validate if User not exist in database but exists in LDAP
                 AdUser adUser = ADConnectorFactory.CreateConnector().GetUserByUsername(user);
                 if (adUser != null)
