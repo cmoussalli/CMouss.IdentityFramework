@@ -1,8 +1,24 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.2.0
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework", "CMouss.IdentityFramework.csproj", "{B6B2FA0B-043E-7A26-F2C1-347012A1F543}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.API.Models", "..\CMouss.IdentityFramework.API.Models\CMouss.IdentityFramework.API.Models.csproj", "{6EAFB33D-942F-B596-C68C-146151ADC34D}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CMouss.IdentityFramework.SharedModels", "..\CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.shproj", "{CF49B500-B440-404C-ABDD-0C6769884253}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.API.Serving", "..\CMouss.IdentityFramework.API.Serving\CMouss.IdentityFramework.API.Serving.csproj", "{A39A1F20-2D92-63E4-5A5D-1D2A63F69D72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.APIServer", "..\CMouss.IdentityFramework.APIServer\CMouss.IdentityFramework.APIServer.csproj", "{46A6AC7F-EE86-E950-6F50-92B6DED86993}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.BlazorUI", "..\CMouss.IdentityFramework.BlazorUI\CMouss.IdentityFramework.BlazorUI.csproj", "{2C7F1AA1-C88B-16C0-43F3-CF249C1EA4A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.Client", "..\CMouss.IdentityFramework.Client\CMouss.IdentityFramework.Client.csproj", "{EA4F22CA-9BE2-A7F9-423A-D4ADF98E9BF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMouss.IdentityFramework.Tests", "..\CMouss.IdentityFramework.Tests\CMouss.IdentityFramework.Tests.csproj", "{BA08AD40-82AA-6E8E-758E-1981030A0283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorUIDemo", "..\BlazorUIDemo\BlazorUIDemo.csproj", "{0C03D0DA-CFAB-B0CC-6F39-09BC3CC9DC78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,11 +30,44 @@ Global
 		{B6B2FA0B-043E-7A26-F2C1-347012A1F543}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6B2FA0B-043E-7A26-F2C1-347012A1F543}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B6B2FA0B-043E-7A26-F2C1-347012A1F543}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EAFB33D-942F-B596-C68C-146151ADC34D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EAFB33D-942F-B596-C68C-146151ADC34D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EAFB33D-942F-B596-C68C-146151ADC34D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EAFB33D-942F-B596-C68C-146151ADC34D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A39A1F20-2D92-63E4-5A5D-1D2A63F69D72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A39A1F20-2D92-63E4-5A5D-1D2A63F69D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A39A1F20-2D92-63E4-5A5D-1D2A63F69D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A39A1F20-2D92-63E4-5A5D-1D2A63F69D72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A6AC7F-EE86-E950-6F50-92B6DED86993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A6AC7F-EE86-E950-6F50-92B6DED86993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A6AC7F-EE86-E950-6F50-92B6DED86993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A6AC7F-EE86-E950-6F50-92B6DED86993}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C7F1AA1-C88B-16C0-43F3-CF249C1EA4A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C7F1AA1-C88B-16C0-43F3-CF249C1EA4A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C7F1AA1-C88B-16C0-43F3-CF249C1EA4A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C7F1AA1-C88B-16C0-43F3-CF249C1EA4A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA4F22CA-9BE2-A7F9-423A-D4ADF98E9BF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA4F22CA-9BE2-A7F9-423A-D4ADF98E9BF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA4F22CA-9BE2-A7F9-423A-D4ADF98E9BF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA4F22CA-9BE2-A7F9-423A-D4ADF98E9BF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA08AD40-82AA-6E8E-758E-1981030A0283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA08AD40-82AA-6E8E-758E-1981030A0283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA08AD40-82AA-6E8E-758E-1981030A0283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA08AD40-82AA-6E8E-758E-1981030A0283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C03D0DA-CFAB-B0CC-6F39-09BC3CC9DC78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C03D0DA-CFAB-B0CC-6F39-09BC3CC9DC78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C03D0DA-CFAB-B0CC-6F39-09BC3CC9DC78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C03D0DA-CFAB-B0CC-6F39-09BC3CC9DC78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7A06CCA6-641B-462C-98AE-CE6E60466137}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{6eafb33d-942f-b596-c68c-146151adc34d}*SharedItemsImports = 5
+		..\CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{b6b2fa0b-043e-7a26-f2c1-347012a1f543}*SharedItemsImports = 5
+		..\CMouss.IdentityFramework.SharedModels\CMouss.IdentityFramework.SharedModels.projitems*{cf49b500-b440-404c-abdd-0c6769884253}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
