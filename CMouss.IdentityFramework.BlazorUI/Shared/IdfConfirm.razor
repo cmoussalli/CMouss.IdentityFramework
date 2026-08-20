@@ -1,0 +1,38 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Shared
+
+@* In page confirmation, no JS confirm() so the Blazor circuit is never blocked. *@
+<IdfModal Visible="Visible" Title="@Title" Size="" OnClose="CancelAsync">
+    <ChildContent>
+        <p class="mb-0">@Message</p>
+        @if (!string.IsNullOrEmpty(Details))
+        {
+            <p class="text-muted small mt-2 mb-0">@Details</p>
+        }
+    </ChildContent>
+    <Footer>
+        <button type="button" class="btn btn-secondary" @onclick="CancelAsync">@CancelText</button>
+        <button type="button" class="btn @ConfirmCss" @onclick="ConfirmAsync">@ConfirmText</button>
+    </Footer>
+</IdfModal>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public string Title { get; set; } = "Please confirm";
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string Details { get; set; } = "";
+    [Parameter] public string ConfirmText { get; set; } = "Delete";
+    [Parameter] public string CancelText { get; set; } = "Cancel";
+    [Parameter] public string ConfirmCss { get; set; } = "btn-danger";
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task ConfirmAsync()
+    {
+        await OnConfirm.InvokeAsync();
+    }
+
+    private async Task CancelAsync()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

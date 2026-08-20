@@ -1,0 +1,121 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@* Single component hosting every Identity Framework management screen. *@
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">
+        <div class="fw-semibold">Access denied</div>
+        <div class="small">
+            @if (CurrentUser is null)
+            {
+                <span>You are not signed in.</span>
+            }
+            else
+            {
+                <span>
+                    @CurrentUser.UserName does not hold any of the roles allowed to manage the identity framework
+                    (@string.Join(", ", IDFBlazorUIAdminConfig.GetAdminRoleIds())).
+                </span>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="idf-admin">
+        <ul class="nav nav-tabs mb-3">
+            @foreach (KeyValuePair<string, string> tab in Tabs)
+            {
+                string key = tab.Key;
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(activeTab == key ? "active" : "")" @onclick="() => SetTab(key)">
+                        @tab.Value
+                    </button>
+                </li>
+            }
+        </ul>
+
+        @switch (activeTab)
+        {
+            case "users":
+                <UsersManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "roles":
+                <RolesManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "entities":
+                <EntitiesManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "actions":
+                <PermissionTypesManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "permissions":
+                <PermissionsManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "apps":
+                <AppsManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "apppermissiontypes":
+                <AppPermissionTypesManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "appaccesses":
+                <AppAccessManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "tokens":
+                <UserTokensManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "attributes":
+                <AttributeTypesManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+            case "system":
+                <MaintenancePart RequireAdminRole="RequireAdminRole" />
+                break;
+            default:
+                <UsersManagerPart RequireAdminRole="RequireAdminRole" />
+                break;
+        }
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Tab opened first: users, roles, entities, actions, permissions, apps,
+    /// apppermissiontypes, appaccesses, tokens, attributes or system.
+    /// </summary>
+    [Parameter] public string DefaultTab { get; set; } = "users";
+
+    private static readonly Dictionary<string, string> Tabs = new()
+    {
+        { "users", "Users" },
+        { "roles", "Roles" },
+        { "entities", "Entities" },
+        { "actions", "Actions" },
+        { "permissions", "Permissions" },
+        { "apps", "Apps" },
+        { "apppermissiontypes", "App permissions" },
+        { "appaccesses", "App accesses" },
+        { "tokens", "User tokens" },
+        { "attributes", "Attributes" },
+        { "system", "System" }
+    };
+
+    private string activeTab = "users";
+
+    protected override void OnInitialized()
+    {
+        activeTab = string.IsNullOrEmpty(DefaultTab) ? "users" : DefaultTab.ToLower();
+        if (!Tabs.ContainsKey(activeTab)) { activeTab = "users"; }
+        base.OnInitialized();
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+    }
+}

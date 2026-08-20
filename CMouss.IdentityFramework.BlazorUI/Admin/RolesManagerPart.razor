@@ -1,0 +1,381 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading roles...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage roles.</div>
+}
+else
+{
+    <IdfPanel Title="Roles" Description="Roles group the permissions granted to the users." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <button type="button" class="btn btn-sm btn-primary" @onclick="OpenCreate">New role</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Title</th>
+                            <th>Permissions</th>
+                            <th>Users</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (roles.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">No role defined yet.</td></tr>
+                        }
+                        @foreach (Role r in roles)
+                        {
+                            <tr>
+                                <td class="font-monospace small">@r.Id</td>
+                                <td class="fw-semibold">
+                                    @r.Title
+                                    @if (IsAdministratorRole(r.Id))
+                                    {
+                                        <span class="badge bg-warning text-dark ms-2">System</span>
+                                    }
+                                </td>
+                                <td>@PermissionCount(r.Id)</td>
+                                <td>@UserCount(r.Id)</td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenEdit(r)">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenPermissions(r)">Permissions</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenUsers(r)">Users</button>
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations && !IsAdministratorRole(r.Id))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(r)">Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </ChildContent>
+    </IdfPanel>
+
+    @* ---------- Create / Edit ---------- *@
+    <IdfModal Visible="showEditor" Title="@(isNew ? "New role" : "Edit role")" Size="" OnClose="CloseEditor">
+        <ChildContent>
+            <div class="mb-3">
+                <label class="form-label">Id</label>
+                <input class="form-control" @bind="editorId" disabled="@(!isNew)" />
+                <div class="form-text">The Id is used in the code, for example ValidateUserRole(userId, "Administrators").</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input class="form-control" @bind="editorTitle" />
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseEditor">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Permissions of the role ---------- *@
+    <IdfModal Visible="showPermissions" Title="@("Permissions of " + selectedTitle)" Size="xl" OnClose="ClosePermissions">
+        <ChildContent>
+            @if (entities.Count == 0 || permissionTypes.Count == 0)
+            {
+                <div class="alert alert-info">
+                    Define at least one entity and one action before granting permissions.
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small">
+                    Tick a cell to grant the action on the entity to this role.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Entity</th>
+                                @foreach (PermissionType p in permissionTypes)
+                                {
+                                    <th class="text-center small">@p.Title</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Entity e in entities)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@e.Title</td>
+                                    @foreach (PermissionType p in permissionTypes)
+                                    {
+                                        string entityId = e.Id;
+                                        string permissionTypeId = p.Id;
+                                        bool granted = grantedKeys.Contains(entityId + "|" + permissionTypeId);
+                                        <td class="text-center">
+                                            <input type="checkbox" class="form-check-input"
+                                                   checked="@granted"
+                                                   @onchange="(ChangeEventArgs args) => TogglePermissionAsync(entityId, permissionTypeId, args)" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="ClosePermissions">Close</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Users of the role ---------- *@
+    <IdfModal Visible="showUsers" Title="@("Users of " + selectedTitle)" OnClose="() => showUsers = false">
+        <ChildContent>
+            @if (roleUsers.Count == 0)
+            {
+                <div class="text-muted">No user holds this role.</div>
+            }
+            <ul class="list-group">
+                @foreach (User u in roleUsers)
+                {
+                    <li class="list-group-item d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <span class="fw-semibold">@u.UserName</span>
+                            <span class="text-muted small ms-2">@u.Email</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RevokeFromUserAsync(u.Id)">Revoke</button>
+                    </li>
+                }
+            </ul>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="() => showUsers = false">Close</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Delete role"
+                Message="@("Delete the role " + selectedTitle + " ?")"
+                Details="Its permissions and all of its user assignments are removed too."
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    private List<Role> roles = new();
+    private List<Entity> entities = new();
+    private List<PermissionType> permissionTypes = new();
+    private Dictionary<string, int> permissionCounts = new();
+    private Dictionary<string, int> userCounts = new();
+
+    private bool showEditor;
+    private bool isNew;
+    private string editorId = "";
+    private string editorTitle = "";
+    private List<string> editorErrors = new();
+
+    private bool showPermissions;
+    private bool showUsers;
+    private bool showDeleteConfirm;
+    private string selectedId = "";
+    private string selectedTitle = "";
+    private HashSet<string> grantedKeys = new();
+    private List<User> roleUsers = new();
+
+    protected override Task LoadDataAsync()
+    {
+        roles = IdfAdminData.GetRoles();
+        entities = IdfAdminData.GetEntities();
+        permissionTypes = IdfAdminData.GetPermissionTypes();
+
+        permissionCounts = new();
+        userCounts = new();
+        foreach (Role r in roles)
+        {
+            permissionCounts[r.Id] = IdfAdminData.GetRolePermissions(r.Id).Count;
+            try { userCounts[r.Id] = IdfAdminData.GetRoleUsers(r.Id).Count; }
+            catch (Exception) { userCounts[r.Id] = 0; }
+        }
+        return Task.CompletedTask;
+    }
+
+    private static bool IsAdministratorRole(string roleId)
+    {
+        return !string.IsNullOrEmpty(IDFManager.AdministratorRoleId)
+            && string.Equals(roleId, IDFManager.AdministratorRoleId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private int PermissionCount(string roleId)
+    {
+        return permissionCounts.ContainsKey(roleId) ? permissionCounts[roleId] : 0;
+    }
+
+    private int UserCount(string roleId)
+    {
+        return userCounts.ContainsKey(roleId) ? userCounts[roleId] : 0;
+    }
+
+    #region Create / Edit
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = true;
+        editorId = "";
+        editorTitle = "";
+        showEditor = true;
+    }
+
+    private void OpenEdit(Role r)
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = false;
+        editorId = r.Id;
+        editorTitle = r.Title;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(editorId)) { editorErrors.Add("Id is required"); }
+        if (string.IsNullOrWhiteSpace(editorTitle)) { editorErrors.Add("Title is required"); }
+        if (editorErrors.Count > 0) { return; }
+
+        bool ok;
+        if (isNew)
+        {
+            if (roles.Any(o => string.Equals(o.Id, editorId, StringComparison.OrdinalIgnoreCase)))
+            {
+                editorErrors.Add("This Id already exists");
+                return;
+            }
+            ok = await ExecuteAsync(() => IDFManager.roleService.Create(editorId, editorTitle), "Role created");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() => IDFManager.roleService.Update(editorId, editorTitle), "Role updated");
+        }
+
+        if (ok) { showEditor = false; IDFManager.RefreshIDFStorage(); }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Delete
+
+    private void AskDelete(Role r)
+    {
+        ClearMessages();
+        selectedId = r.Id;
+        selectedTitle = r.Title;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        bool ok = await ExecuteAsync(() => IdfAdminData.DeleteRole(selectedId), "Role deleted");
+        if (ok) { IDFManager.RefreshIDFStorage(); }
+    }
+
+    #endregion
+
+    #region Permissions
+
+    private void OpenPermissions(Role r)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedId = r.Id;
+        selectedTitle = r.Title;
+        LoadGranted();
+        showPermissions = true;
+    }
+
+    private void LoadGranted()
+    {
+        grantedKeys = new();
+        foreach (Permission p in IdfAdminData.GetRolePermissions(selectedId))
+        {
+            grantedKeys.Add(p.EntityId + "|" + p.PermissionTypeId);
+        }
+    }
+
+    private void ClosePermissions()
+    {
+        showPermissions = false;
+        editorErrors = new();
+    }
+
+    private async Task TogglePermissionAsync(string entityId, string permissionTypeId, ChangeEventArgs args)
+    {
+        editorErrors = new();
+        bool grant = args.Value is bool ? (bool)args.Value : false;
+        bool ok;
+        if (grant)
+        {
+            ok = await ExecuteAsync(() => IdfAdminData.GrantPermission(selectedId, entityId, permissionTypeId), "Permission granted");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() => IdfAdminData.RevokePermission(selectedId, entityId, permissionTypeId), "Permission revoked");
+        }
+        if (!ok) { editorErrors = new List<string>(Errors); }
+        LoadGranted();
+        IDFManager.RefreshIDFStorage();
+    }
+
+    #endregion
+
+    #region Users
+
+    private void OpenUsers(Role r)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedId = r.Id;
+        selectedTitle = r.Title;
+        LoadRoleUsers();
+        showUsers = true;
+    }
+
+    private void LoadRoleUsers()
+    {
+        try { roleUsers = IdfAdminData.GetRoleUsers(selectedId); }
+        catch (Exception ex) { roleUsers = new(); editorErrors.Add(ex.Message); }
+    }
+
+    private async Task RevokeFromUserAsync(string userId)
+    {
+        editorErrors = new();
+        bool ok = await ExecuteAsync(() => IDFManager.userService.RevokeRole(userId, selectedId), "Role revoked");
+        if (!ok) { editorErrors = new List<string>(Errors); }
+        LoadRoleUsers();
+    }
+
+    #endregion
+}

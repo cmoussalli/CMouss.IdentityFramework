@@ -24,6 +24,9 @@ CMouss.IdentityFramework.BlazorUI provides ready-to-use Blazor Server components
 - Automatic session validation
 - Pre-built authentication layouts
 - Logout functionality
+- Management components for every function of the framework: users, roles, entities, actions,
+  permissions, apps, app permission types, app accesses, user tokens and attribute types
+  (see [Management Components](BlazorUI-Management-Components.md))
 
 ## Installation
 

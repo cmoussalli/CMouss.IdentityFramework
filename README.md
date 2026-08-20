@@ -10,7 +10,7 @@ A full-featured identity and access management framework for .NET applications. 
 
 - **Multiple Authentication Backends**: Database or LDAP/Active Directory authentication
 - **Role-Based Access Control (RBAC)**: Granular permissions with entity-action model
-- **Blazor UI Components**: Ready-to-use login, signup, and logout components
+- **Blazor UI Components**: Ready-to-use login, signup and logout components, plus management screens for users, roles, entities, actions, permissions, apps, app accesses and tokens
 - **API Protection**: Action filters for securing API endpoints
 - **Token Management**: Encrypted tokens with configurable expiration
 - **Multi-Tenant Support**: Application-level access control

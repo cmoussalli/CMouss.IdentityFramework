@@ -1,0 +1,592 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading app accesses...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage app accesses.</div>
+}
+else
+{
+    <IdfPanel Title="App accesses (app tokens)" Description="An AccessKey / AccessSecret pair lets an app authenticate on behalf of a user." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+            {
+                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => showCleanConfirm = true">Purge expired</button>
+            }
+            <button type="button" class="btn btn-sm btn-primary" disabled="@(apps.Count == 0)" @onclick="OpenGenerate">Generate access</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            @if (apps.Count == 0)
+            {
+                <div class="alert alert-info mb-0">Create an app first.</div>
+            }
+            else
+            {
+                @if (string.IsNullOrEmpty(AppId) || string.IsNullOrEmpty(UserId))
+                {
+                    <div class="row g-2 align-items-end mb-3">
+                        @if (string.IsNullOrEmpty(AppId))
+                        {
+                            <div class="col-md-4">
+                                <label class="form-label small mb-1">App</label>
+                                <select class="form-select form-select-sm" value="@filterAppId" @onchange="OnAppFilterChangedAsync">
+                                    <option value="">All apps</option>
+                                    @foreach (App a in apps)
+                                    {
+                                        <option value="@a.Id">@a.Title</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        @if (string.IsNullOrEmpty(UserId))
+                        {
+                            <div class="col-md-4">
+                                <label class="form-label small mb-1">User</label>
+                                <select class="form-select form-select-sm" value="@filterUserId" @onchange="OnUserFilterChangedAsync">
+                                    <option value="">All users</option>
+                                    @foreach (User u in users)
+                                    {
+                                        <option value="@u.Id">@u.UserName</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(justGeneratedSecret))
+                {
+                    <div class="alert alert-warning">
+                        <div class="fw-semibold mb-2">Copy the AccessSecret now, it is only shown here in full.</div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label small mb-1">AccessKey</label>
+                                <IdfSecret Value="@justGeneratedKey" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small mb-1">AccessSecret</label>
+                                <IdfSecret Value="@justGeneratedSecret" />
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>App</th>
+                                <th>User</th>
+                                <th>AccessKey</th>
+                                <th>AccessSecret</th>
+                                <th>Expires</th>
+                                <th>IPs</th>
+                                <th>Permissions</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (accesses.Count == 0)
+                            {
+                                <tr><td colspan="8" class="text-center text-muted py-3">No app access found.</td></tr>
+                            }
+                            @foreach (AppAccess a in accesses)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@(a.App is null ? a.AppId : a.App.Title)</td>
+                                    <td>@(a.User is null ? Shorten(a.UserId, 10) : a.User.UserName)</td>
+                                    <td style="min-width:220px;"><IdfSecret Value="@a.AccessKey" /></td>
+                                    <td style="min-width:220px;"><IdfSecret Value="@a.AccessSecret" /></td>
+                                    <td class="small text-nowrap">
+                                        @a.ExpireDate.ToString("yyyy-MM-dd HH:mm")
+                                        @if (a.ExpireDate < DateTime.Now)
+                                        {
+                                            <span class="badge bg-danger ms-1">Expired</span>
+                                        }
+                                    </td>
+                                    <td class="small">
+                                        @if (string.IsNullOrEmpty(a.AllowedIPAddresses))
+                                        {
+                                            <span class="text-muted">Any</span>
+                                        }
+                                        else
+                                        {
+                                            <span title="@a.AllowedIPAddresses">@Shorten(a.AllowedIPAddresses, 18)</span>
+                                        }
+                                    </td>
+                                    <td>@(a.AppAccessPermissions is null ? 0 : a.AppAccessPermissions.Count)</td>
+                                    <td class="text-end text-nowrap">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenPermissions(a)">Permissions</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenIPs(a)">IPs</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenLifeTime(a, false)">Extend</button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => OpenLifeTime(a, true)">New secret</button>
+                                        @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(a)">Delete</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+        </ChildContent>
+    </IdfPanel>
+
+    @* ---------- Generate ---------- *@
+    <IdfModal Visible="showGenerate" Title="Generate an app access" OnClose="CloseGenerate">
+        <ChildContent>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">App</label>
+                    <select class="form-select" @bind="generateAppId" disabled="@(!string.IsNullOrEmpty(AppId))">
+                        <option value="">Select an app</option>
+                        @foreach (App a in apps)
+                        {
+                            <option value="@a.Id">@a.Title</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">User</label>
+                    <select class="form-select" @bind="generateUserId" disabled="@(!string.IsNullOrEmpty(UserId))">
+                        <option value="">Select a user</option>
+                        @foreach (User u in users)
+                        {
+                            <option value="@u.Id">@u.UserName (@u.Email)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Lifetime</label>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="input-group">
+                                <input type="number" min="0" class="form-control" @bind="lifeDays" />
+                                <span class="input-group-text">days</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="input-group">
+                                <input type="number" min="0" class="form-control" @bind="lifeHours" />
+                                <span class="input-group-text">hours</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="input-group">
+                                <input type="number" min="0" class="form-control" @bind="lifeMinutes" />
+                                <span class="input-group-text">minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseGenerate">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="GenerateAsync">Generate</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Lifetime (extend / new secret) ---------- *@
+    <IdfModal Visible="showLifeTime" Title="@(refreshSecret ? "Generate a new AccessSecret" : "Extend the app access")" Size="" OnClose="CloseLifeTime">
+        <ChildContent>
+            @if (refreshSecret)
+            {
+                <div class="alert alert-warning small">
+                    The current AccessSecret stops working immediately, the app has to be updated.
+                </div>
+            }
+            <label class="form-label">New lifetime, starting now</label>
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="input-group">
+                        <input type="number" min="0" class="form-control" @bind="lifeDays" />
+                        <span class="input-group-text">days</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="input-group">
+                        <input type="number" min="0" class="form-control" @bind="lifeHours" />
+                        <span class="input-group-text">hours</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="input-group">
+                        <input type="number" min="0" class="form-control" @bind="lifeMinutes" />
+                        <span class="input-group-text">min</span>
+                    </div>
+                </div>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseLifeTime">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="ApplyLifeTimeAsync">Apply</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Allowed IPs ---------- *@
+    <IdfModal Visible="showIPs" Title="Allowed IP addresses" Size="" OnClose="CloseIPs">
+        <ChildContent>
+            <label class="form-label">Allowed IP addresses</label>
+            <input class="form-control" @bind="allowedIPs" placeholder="10.0.0.1,10.0.0.2" />
+            <div class="form-text">
+                Comma separated. Leave empty to allow any IP address.
+                Last IP seen: @(string.IsNullOrEmpty(selectedLastIP) ? "none" : selectedLastIP)
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseIPs">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveIPsAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Permissions of the access ---------- *@
+    <IdfModal Visible="showPermissions" Title="@("Permissions of the access to " + selectedAppTitle)" OnClose="ClosePermissions">
+        <ChildContent>
+            @if (appPermissionTypes.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    This app has no permission type yet, define them in the app screen first.
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (AppPermissionType p in appPermissionTypes)
+                    {
+                        string permissionTypeId = p.Id;
+                        bool granted = grantedPermissionIds.Contains(p.Id);
+                        <div class="list-group-item d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="fw-semibold">@p.Title</span>
+                                <span class="text-muted small ms-2">@p.Id</span>
+                            </div>
+                            @if (granted)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RevokePermissionAsync(permissionTypeId)">Revoke</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => GrantPermissionAsync(permissionTypeId)">Grant</button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="ClosePermissions">Close</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Delete app access"
+                Message="@("Delete the access of " + selectedAppTitle + " ?")"
+                Details="The app stops authenticating immediately."
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+
+    <IdfConfirm Visible="showCleanConfirm"
+                Title="Purge expired accesses"
+                Message="Remove every expired app access ?"
+                Details="Only accesses whose expiry date is in the past are removed."
+                ConfirmText="Purge"
+                OnConfirm="CleanExpiredAsync"
+                OnCancel="() => showCleanConfirm = false" />
+}
+
+@code {
+    /// <summary>When set, the component only manages the accesses of this app.</summary>
+    [Parameter] public string AppId { get; set; } = "";
+
+    /// <summary>When set, the component only manages the accesses of this user.</summary>
+    [Parameter] public string UserId { get; set; } = "";
+
+    private List<AppAccess> accesses = new();
+    private List<App> apps = new();
+    private List<User> users = new();
+    private List<AppPermissionType> appPermissionTypes = new();
+    private HashSet<string> grantedPermissionIds = new();
+
+    private string filterAppId = "";
+    private string filterUserId = "";
+
+    private bool showGenerate;
+    private string generateAppId = "";
+    private string generateUserId = "";
+    private int lifeDays;
+    private int lifeHours;
+    private int lifeMinutes;
+    private string justGeneratedKey = "";
+    private string justGeneratedSecret = "";
+    private List<string> editorErrors = new();
+
+    private bool showLifeTime;
+    private bool refreshSecret;
+    private bool showIPs;
+    private bool showPermissions;
+    private bool showDeleteConfirm;
+    private bool showCleanConfirm;
+
+    private string selectedId = "";
+    private string selectedAppId = "";
+    private string selectedAppTitle = "";
+    private string selectedLastIP = "";
+    private string allowedIPs = "";
+
+    protected override Task LoadDataAsync()
+    {
+        apps = IdfAdminData.GetApps(true);
+        users = IdfAdminData.GetUsers(false);
+
+        string appId = string.IsNullOrEmpty(AppId) ? filterAppId : AppId;
+        string userId = string.IsNullOrEmpty(UserId) ? filterUserId : UserId;
+        accesses = IdfAdminData.GetAppAccesses(appId, userId);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnAppFilterChangedAsync(ChangeEventArgs args)
+    {
+        filterAppId = args.Value is null ? "" : args.Value.ToString() ?? "";
+        await RefreshAsync();
+    }
+
+    private async Task OnUserFilterChangedAsync(ChangeEventArgs args)
+    {
+        filterUserId = args.Value is null ? "" : args.Value.ToString() ?? "";
+        await RefreshAsync();
+    }
+
+    private void LoadDefaultLifeTime()
+    {
+        LifeTime lifeTime = IDFBlazorUIAdminConfig.GetDefaultAppAccessLifeTime();
+        lifeDays = lifeTime.Days;
+        lifeHours = lifeTime.Hours;
+        lifeMinutes = lifeTime.Minutes;
+    }
+
+    #region Generate
+
+    private void OpenGenerate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        justGeneratedKey = "";
+        justGeneratedSecret = "";
+        generateAppId = string.IsNullOrEmpty(AppId) ? filterAppId : AppId;
+        generateUserId = string.IsNullOrEmpty(UserId) ? filterUserId : UserId;
+        if (string.IsNullOrEmpty(generateUserId)) { generateUserId = CurrentUserId; }
+        LoadDefaultLifeTime();
+        showGenerate = true;
+    }
+
+    private void CloseGenerate()
+    {
+        showGenerate = false;
+        editorErrors = new();
+    }
+
+    private async Task GenerateAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(generateAppId)) { editorErrors.Add("App is required"); }
+        if (string.IsNullOrWhiteSpace(generateUserId)) { editorErrors.Add("User is required"); }
+        if (lifeDays <= 0 && lifeHours <= 0 && lifeMinutes <= 0) { editorErrors.Add("The lifetime must be greater than zero"); }
+        if (editorErrors.Count > 0) { return; }
+
+        string appId = generateAppId;
+        string userId = generateUserId;
+        LifeTime lifeTime = new LifeTime(lifeDays, lifeHours, lifeMinutes);
+
+        bool ok = await ExecuteAsync(() =>
+        {
+            AppAccess generated = IDFManager.appAccessService.Generate(userId, appId, lifeTime);
+            justGeneratedKey = generated.AccessKey;
+            justGeneratedSecret = generated.AccessSecret;
+        }, "App access generated");
+
+        if (ok) { showGenerate = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Lifetime
+
+    private void OpenLifeTime(AppAccess a, bool newSecret)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedId = a.Id;
+        selectedAppTitle = a.App is null ? a.AppId : a.App.Title;
+        refreshSecret = newSecret;
+        LoadDefaultLifeTime();
+        showLifeTime = true;
+    }
+
+    private void CloseLifeTime()
+    {
+        showLifeTime = false;
+        editorErrors = new();
+    }
+
+    private async Task ApplyLifeTimeAsync()
+    {
+        editorErrors = new();
+        if (lifeDays <= 0 && lifeHours <= 0 && lifeMinutes <= 0)
+        {
+            editorErrors.Add("The lifetime must be greater than zero");
+            return;
+        }
+
+        string id = selectedId;
+        LifeTime lifeTime = new LifeTime(lifeDays, lifeHours, lifeMinutes);
+        bool ok;
+        if (refreshSecret)
+        {
+            ok = await ExecuteAsync(() =>
+            {
+                IdfAdminData.RefreshAppAccessSecret(id, lifeTime);
+                AppAccess? updated = IdfAdminData.FindAppAccess(id);
+                if (updated is not null)
+                {
+                    justGeneratedKey = updated.AccessKey;
+                    justGeneratedSecret = updated.AccessSecret;
+                }
+            }, "A new AccessSecret has been generated");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() => IdfAdminData.ExtendAppAccess(id, lifeTime), "App access extended");
+        }
+
+        if (ok) { showLifeTime = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Allowed IPs
+
+    private void OpenIPs(AppAccess a)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedId = a.Id;
+        selectedAppTitle = a.App is null ? a.AppId : a.App.Title;
+        selectedLastIP = a.LastIPAddress ?? "";
+        allowedIPs = a.AllowedIPAddresses ?? "";
+        showIPs = true;
+    }
+
+    private void CloseIPs()
+    {
+        showIPs = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveIPsAsync()
+    {
+        string id = selectedId;
+        string ips = allowedIPs ?? "";
+        bool ok = await ExecuteAsync(() => IdfAdminData.SetAppAccessAllowedIPs(id, ips), "Allowed IP addresses saved");
+        if (ok) { showIPs = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Permissions
+
+    private void OpenPermissions(AppAccess a)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedId = a.Id;
+        selectedAppId = a.AppId;
+        selectedAppTitle = a.App is null ? a.AppId : a.App.Title;
+        LoadAccessPermissions();
+        showPermissions = true;
+    }
+
+    private void LoadAccessPermissions()
+    {
+        appPermissionTypes = IdfAdminData.GetAppPermissionTypes(selectedAppId);
+        grantedPermissionIds = new();
+        foreach (AppAccessPermission p in IdfAdminData.GetAppAccessPermissions(selectedId))
+        {
+            grantedPermissionIds.Add(p.AppPermissionTypeId);
+        }
+    }
+
+    private void ClosePermissions()
+    {
+        showPermissions = false;
+        editorErrors = new();
+    }
+
+    private async Task GrantPermissionAsync(string appPermissionTypeId)
+    {
+        editorErrors = new();
+        string id = selectedId;
+        bool ok = await ExecuteAsync(() => IDFManager.appAccessService.GrantPermission(id, appPermissionTypeId), "Permission granted");
+        if (!ok) { editorErrors = new List<string>(Errors); }
+        LoadAccessPermissions();
+    }
+
+    private async Task RevokePermissionAsync(string appPermissionTypeId)
+    {
+        editorErrors = new();
+        string id = selectedId;
+        bool ok = await ExecuteAsync(() => IdfAdminData.RevokeAppAccessPermission(id, appPermissionTypeId), "Permission revoked");
+        if (!ok) { editorErrors = new List<string>(Errors); }
+        LoadAccessPermissions();
+    }
+
+    #endregion
+
+    #region Delete / Purge
+
+    private void AskDelete(AppAccess a)
+    {
+        ClearMessages();
+        selectedId = a.Id;
+        selectedAppTitle = a.App is null ? a.AppId : a.App.Title;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        string id = selectedId;
+        await ExecuteAsync(() => IdfAdminData.DeleteAppAccess(id), "App access deleted");
+    }
+
+    private async Task CleanExpiredAsync()
+    {
+        showCleanConfirm = false;
+        int removed = 0;
+        bool ok = await ExecuteAsync(() =>
+        {
+            removed = IDFManager.appAccessService.CleanExpiredAppAccesss();
+        }, "Expired app accesses removed");
+        if (ok) { SetSuccess(removed + " expired app access(es) removed"); }
+    }
+
+    #endregion
+}

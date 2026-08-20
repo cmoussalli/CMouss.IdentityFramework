@@ -1,0 +1,48 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Shared
+
+@if (Errors is not null && Errors.Count > 0)
+{
+    <div class="alert alert-danger alert-dismissible d-flex" role="alert">
+        <div class="flex-grow-1">
+            @if (Errors.Count == 1)
+            {
+                <span>@Errors[0]</span>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (string error in Errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            }
+        </div>
+        @if (OnDismiss.HasDelegate)
+        {
+            <button type="button" class="btn-close" @onclick="Dismiss"></button>
+        }
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="alert alert-success alert-dismissible d-flex" role="alert">
+        <div class="flex-grow-1">@SuccessMessage</div>
+        @if (OnDismiss.HasDelegate)
+        {
+            <button type="button" class="btn-close" @onclick="Dismiss"></button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<string>? Errors { get; set; }
+    [Parameter] public string? SuccessMessage { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    private async Task Dismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+}

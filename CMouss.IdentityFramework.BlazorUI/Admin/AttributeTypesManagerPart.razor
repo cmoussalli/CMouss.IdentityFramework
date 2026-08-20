@@ -1,0 +1,191 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading attribute types...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage attribute types.</div>
+}
+else
+{
+    <IdfPanel Title="Attribute types" Description="Custom fields that can be attached to a user, for example Department or Phone." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <button type="button" class="btn btn-sm btn-primary" @onclick="OpenCreate">New attribute type</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Title</th>
+                            <th>Multi value</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (attributeTypes.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-3">No attribute type defined yet.</td></tr>
+                        }
+                        @foreach (AttributeType a in attributeTypes)
+                        {
+                            <tr>
+                                <td class="font-monospace small">@a.Id</td>
+                                <td class="fw-semibold">@a.Title</td>
+                                <td>
+                                    @if (a.IsList)
+                                    {
+                                        <span class="badge bg-info text-dark">List</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Single</span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenEdit(a)">Edit</button>
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(a)">Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfModal Visible="showEditor" Title="@(isNew ? "New attribute type" : "Edit attribute type")" Size="" OnClose="CloseEditor">
+        <ChildContent>
+            <div class="mb-3">
+                <label class="form-label">Id</label>
+                <input class="form-control" @bind="editorId" disabled="@(!isNew)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input class="form-control" @bind="editorTitle" />
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="idf-attr-list" @bind="editorIsList" />
+                <label class="form-check-label" for="idf-attr-list">This attribute holds several values</label>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseEditor">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Delete attribute type"
+                Message="@("Delete " + selectedTitle + " ?")"
+                Details="Every value stored for this attribute is removed too."
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    private List<AttributeType> attributeTypes = new();
+
+    private bool showEditor;
+    private bool isNew;
+    private string editorId = "";
+    private string editorTitle = "";
+    private bool editorIsList;
+    private List<string> editorErrors = new();
+
+    private bool showDeleteConfirm;
+    private string selectedId = "";
+    private string selectedTitle = "";
+
+    protected override Task LoadDataAsync()
+    {
+        attributeTypes = IdfAdminData.GetAttributeTypes();
+        return Task.CompletedTask;
+    }
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = true;
+        editorId = "";
+        editorTitle = "";
+        editorIsList = false;
+        showEditor = true;
+    }
+
+    private void OpenEdit(AttributeType a)
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = false;
+        editorId = a.Id;
+        editorTitle = a.Title;
+        editorIsList = a.IsList;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(editorId)) { editorErrors.Add("Id is required"); }
+        if (string.IsNullOrWhiteSpace(editorTitle)) { editorErrors.Add("Title is required"); }
+        if (editorErrors.Count > 0) { return; }
+
+        string id = editorId;
+        string title = editorTitle;
+        bool isList = editorIsList;
+
+        bool ok;
+        if (isNew)
+        {
+            if (attributeTypes.Any(o => string.Equals(o.Id, id, StringComparison.OrdinalIgnoreCase)))
+            {
+                editorErrors.Add("This Id already exists");
+                return;
+            }
+            ok = await ExecuteAsync(() => IdfAdminData.AttributeTypeService.Create(id, title, isList), "Attribute type created");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() => IdfAdminData.AttributeTypeService.Update(id, title, isList), "Attribute type updated");
+        }
+
+        if (ok) { showEditor = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    private void AskDelete(AttributeType a)
+    {
+        ClearMessages();
+        selectedId = a.Id;
+        selectedTitle = a.Title;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        string id = selectedId;
+        await ExecuteAsync(() => IdfAdminData.DeleteAttributeType(id), "Attribute type deleted");
+    }
+}

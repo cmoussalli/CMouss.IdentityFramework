@@ -1,0 +1,250 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading permissions...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage permissions.</div>
+}
+else
+{
+    <IdfPanel Title="Permissions" Description="A permission grants one action on one entity to one role." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn @(showMatrix ? "btn-primary" : "btn-outline-primary")" @onclick="() => showMatrix = true">Matrix</button>
+                <button type="button" class="btn @(showMatrix ? "btn-outline-primary" : "btn-primary")" @onclick="() => showMatrix = false">List</button>
+            </div>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            @if (roles.Count == 0 || entities.Count == 0 || permissionTypes.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    Define at least one role, one entity and one action before granting permissions.
+                </div>
+            }
+            else if (showMatrix)
+            {
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Role</label>
+                        <select class="form-select form-select-sm" value="@selectedRoleId" @onchange="OnRoleChangedAsync">
+                            @foreach (Role r in roles)
+                            {
+                                <option value="@r.Id">@r.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-8 text-muted small">
+                        Tick a cell to grant the action on the entity to the selected role.
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th style="min-width:180px;">Entity</th>
+                                @foreach (PermissionType p in permissionTypes)
+                                {
+                                    <th class="text-center small">@p.Title</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Entity e in entities)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">
+                                        @e.Title
+                                        <span class="text-muted small ms-1">@e.Id</span>
+                                    </td>
+                                    @foreach (PermissionType p in permissionTypes)
+                                    {
+                                        string entityId = e.Id;
+                                        string permissionTypeId = p.Id;
+                                        bool granted = grantedKeys.Contains(entityId + "|" + permissionTypeId);
+                                        <td class="text-center">
+                                            <input type="checkbox" class="form-check-input"
+                                                   checked="@granted"
+                                                   @onchange="(ChangeEventArgs args) => ToggleAsync(entityId, permissionTypeId, args)" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Role</label>
+                        <select class="form-select form-select-sm" @bind="listRoleId">
+                            <option value="">All roles</option>
+                            @foreach (Role r in roles)
+                            {
+                                <option value="@r.Id">@r.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Entity</label>
+                        <select class="form-select form-select-sm" @bind="listEntityId">
+                            <option value="">All entities</option>
+                            @foreach (Entity e in entities)
+                            {
+                                <option value="@e.Id">@e.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Action</label>
+                        <select class="form-select form-select-sm" @bind="listPermissionTypeId">
+                            <option value="">All actions</option>
+                            @foreach (PermissionType p in permissionTypes)
+                            {
+                                <option value="@p.Id">@p.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="RefreshAsync">Apply</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Entity</th>
+                                <th>Action</th>
+                                <th>Id</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (permissions.Count == 0)
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-3">No permission found.</td></tr>
+                            }
+                            @foreach (Permission p in permissions)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@(p.Role is null ? p.RoleId : p.Role.Title)</td>
+                                    <td>@(p.Entity is null ? p.EntityId : p.Entity.Title)</td>
+                                    <td>@(p.PermissionType is null ? p.PermissionTypeId : p.PermissionType.Title)</td>
+                                    <td class="font-monospace small text-muted">@Shorten(p.Id, 12)</td>
+                                    <td class="text-end">
+                                        @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(p)">Revoke</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Revoke permission"
+                Message="@selectedLabel"
+                Details="The role loses this action on this entity."
+                ConfirmText="Revoke"
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    private List<Role> roles = new();
+    private List<Entity> entities = new();
+    private List<PermissionType> permissionTypes = new();
+    private List<Permission> permissions = new();
+    private HashSet<string> grantedKeys = new();
+
+    private bool showMatrix = true;
+    private string selectedRoleId = "";
+    private string listRoleId = "";
+    private string listEntityId = "";
+    private string listPermissionTypeId = "";
+
+    private bool showDeleteConfirm;
+    private string selectedPermissionId = "";
+    private string selectedLabel = "";
+
+    protected override Task LoadDataAsync()
+    {
+        roles = IdfAdminData.GetRoles();
+        entities = IdfAdminData.GetEntities();
+        permissionTypes = IdfAdminData.GetPermissionTypes();
+
+        if (string.IsNullOrEmpty(selectedRoleId) && roles.Count > 0)
+        {
+            selectedRoleId = roles[0].Id;
+        }
+        LoadGranted();
+        permissions = IdfAdminData.GetPermissions(listRoleId, listEntityId, listPermissionTypeId);
+        return Task.CompletedTask;
+    }
+
+    private void LoadGranted()
+    {
+        grantedKeys = new();
+        if (string.IsNullOrEmpty(selectedRoleId)) { return; }
+        foreach (Permission p in IdfAdminData.GetRolePermissions(selectedRoleId))
+        {
+            grantedKeys.Add(p.EntityId + "|" + p.PermissionTypeId);
+        }
+    }
+
+    private async Task OnRoleChangedAsync(ChangeEventArgs args)
+    {
+        selectedRoleId = args.Value is null ? "" : args.Value.ToString() ?? "";
+        await RefreshAsync();
+    }
+
+    private async Task ToggleAsync(string entityId, string permissionTypeId, ChangeEventArgs args)
+    {
+        bool grant = args.Value is bool ? (bool)args.Value : false;
+        if (grant)
+        {
+            await ExecuteAsync(() => IdfAdminData.GrantPermission(selectedRoleId, entityId, permissionTypeId), "Permission granted");
+        }
+        else
+        {
+            await ExecuteAsync(() => IdfAdminData.RevokePermission(selectedRoleId, entityId, permissionTypeId), "Permission revoked");
+        }
+        IDFManager.RefreshIDFStorage();
+    }
+
+    private void AskDelete(Permission p)
+    {
+        ClearMessages();
+        selectedPermissionId = p.Id;
+        string roleTitle = p.Role is null ? p.RoleId : p.Role.Title;
+        string entityTitle = p.Entity is null ? p.EntityId : p.Entity.Title;
+        string actionTitle = p.PermissionType is null ? p.PermissionTypeId : p.PermissionType.Title;
+        selectedLabel = "Revoke " + actionTitle + " on " + entityTitle + " from " + roleTitle + " ?";
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        bool ok = await ExecuteAsync(() => IdfAdminData.DeletePermission(selectedPermissionId), "Permission revoked");
+        if (ok) { IDFManager.RefreshIDFStorage(); }
+    }
+}

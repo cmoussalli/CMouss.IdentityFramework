@@ -1,0 +1,12 @@
+@page "/admin"
+@layout MainLayoutAuth
+
+<PageTitle>Identity administration</PageTitle>
+
+<h3 class="mb-3">Identity administration</h3>
+
+@* Everything the CMouss.IdentityFramework exposes, in one component. *@
+<CMouss.IdentityFramework.BlazorUI.Admin.IdentityAdminPart DefaultTab="users" />
+
+@code {
+}

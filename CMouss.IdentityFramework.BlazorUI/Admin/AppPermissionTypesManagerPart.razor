@@ -1,0 +1,248 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading app permission types...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage app permission types.</div>
+}
+else
+{
+    <IdfPanel Title="App permission types" Description="What an app is allowed to do, checked with ValidateAppAccessPermission." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <button type="button" class="btn btn-sm btn-primary" disabled="@(apps.Count == 0)" @onclick="OpenCreate">New permission type</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            @if (apps.Count == 0)
+            {
+                <div class="alert alert-info mb-0">Create an app first.</div>
+            }
+            else
+            {
+                @if (string.IsNullOrEmpty(AppId))
+                {
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small mb-1">App</label>
+                            <select class="form-select form-select-sm" value="@filterAppId" @onchange="OnAppFilterChangedAsync">
+                                <option value="">All apps</option>
+                                @foreach (App a in apps)
+                                {
+                                    <option value="@a.Id">@a.Title</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Title</th>
+                                @if (string.IsNullOrEmpty(AppId))
+                                {
+                                    <th>App</th>
+                                }
+                                <th>Granted to</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (permissionTypes.Count == 0)
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-3">No permission type defined yet.</td></tr>
+                            }
+                            @foreach (AppPermissionType p in permissionTypes)
+                            {
+                                <tr>
+                                    <td class="font-monospace small">@p.Id</td>
+                                    <td class="fw-semibold">@p.Title</td>
+                                    @if (string.IsNullOrEmpty(AppId))
+                                    {
+                                        <td>@(p.App is null ? p.AppId : p.App.Title)</td>
+                                    }
+                                    <td>@GrantedCount(p.Id) access(es)</td>
+                                    <td class="text-end text-nowrap">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenEdit(p)">Edit</button>
+                                        @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(p)">Delete</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfModal Visible="showEditor" Title="@(isNew ? "New app permission type" : "Edit app permission type")" Size="" OnClose="CloseEditor">
+        <ChildContent>
+            <div class="mb-3">
+                <label class="form-label">Id</label>
+                <input class="form-control" @bind="editorId" disabled="@(!isNew)" />
+                <div class="form-text">For example ReadInvoices, the value passed to ValidateAppAccessPermission.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input class="form-control" @bind="editorTitle" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">App</label>
+                <select class="form-select" @bind="editorAppId" disabled="@(!string.IsNullOrEmpty(AppId))">
+                    <option value="">Select an app</option>
+                    @foreach (App a in apps)
+                    {
+                        <option value="@a.Id">@a.Title</option>
+                    }
+                </select>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseEditor">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Delete app permission type"
+                Message="@("Delete " + selectedTitle + " ?")"
+                Details="It is also revoked from every app access holding it."
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    /// <summary>When set, the component only manages the permission types of this app.</summary>
+    [Parameter] public string AppId { get; set; } = "";
+
+    private List<App> apps = new();
+    private List<AppPermissionType> permissionTypes = new();
+    private Dictionary<string, int> grantedCounts = new();
+    private string filterAppId = "";
+
+    private bool showEditor;
+    private bool isNew;
+    private string editorId = "";
+    private string editorTitle = "";
+    private string editorAppId = "";
+    private List<string> editorErrors = new();
+
+    private bool showDeleteConfirm;
+    private string selectedId = "";
+    private string selectedTitle = "";
+
+    protected override Task LoadDataAsync()
+    {
+        apps = IdfAdminData.GetApps(true);
+
+        string appId = string.IsNullOrEmpty(AppId) ? filterAppId : AppId;
+        permissionTypes = IdfAdminData.GetAppPermissionTypes(appId);
+
+        grantedCounts = new();
+        List<AppAccessPermission> all = IdfAdminData.AppAccessPermissionService.GetAll();
+        foreach (AppPermissionType p in permissionTypes)
+        {
+            grantedCounts[p.Id] = all.Count(o => o.AppPermissionTypeId == p.Id);
+        }
+        return Task.CompletedTask;
+    }
+
+    private int GrantedCount(string permissionTypeId)
+    {
+        return grantedCounts.ContainsKey(permissionTypeId) ? grantedCounts[permissionTypeId] : 0;
+    }
+
+    private async Task OnAppFilterChangedAsync(ChangeEventArgs args)
+    {
+        filterAppId = args.Value is null ? "" : args.Value.ToString() ?? "";
+        await RefreshAsync();
+    }
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = true;
+        editorId = "";
+        editorTitle = "";
+        editorAppId = string.IsNullOrEmpty(AppId) ? filterAppId : AppId;
+        showEditor = true;
+    }
+
+    private void OpenEdit(AppPermissionType p)
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = false;
+        editorId = p.Id;
+        editorTitle = p.Title;
+        editorAppId = p.AppId;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(editorId)) { editorErrors.Add("Id is required"); }
+        if (string.IsNullOrWhiteSpace(editorTitle)) { editorErrors.Add("Title is required"); }
+        if (string.IsNullOrWhiteSpace(editorAppId)) { editorErrors.Add("App is required"); }
+        if (editorErrors.Count > 0) { return; }
+
+        string id = editorId;
+        string title = editorTitle;
+        string appId = editorAppId;
+
+        bool ok;
+        if (isNew)
+        {
+            if (IdfAdminData.GetAppPermissionTypes(null).Any(o => string.Equals(o.Id, id, StringComparison.OrdinalIgnoreCase)))
+            {
+                editorErrors.Add("This Id already exists");
+                return;
+            }
+            ok = await ExecuteAsync(() => IdfAdminData.AppPermissionTypeService.Create(id, title, appId), "App permission type created");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() => IdfAdminData.AppPermissionTypeService.Update(id, title, appId), "App permission type updated");
+        }
+
+        if (ok) { showEditor = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    private void AskDelete(AppPermissionType p)
+    {
+        ClearMessages();
+        selectedId = p.Id;
+        selectedTitle = p.Title;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        string id = selectedId;
+        await ExecuteAsync(() => IdfAdminData.DeleteAppPermissionType(id), "App permission type deleted");
+    }
+}

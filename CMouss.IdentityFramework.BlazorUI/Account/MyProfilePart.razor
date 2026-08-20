@@ -1,0 +1,236 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Account
+@inherits CMouss.IdentityFramework.BlazorUI.Admin.IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading your profile...</div>
+}
+else if (CurrentUser is null)
+{
+    <div class="alert alert-warning">You are not signed in.</div>
+}
+else
+{
+    <IdfPanel Title="My profile" IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Username</dt>
+                <dd class="col-sm-9">@CurrentUser.UserName</dd>
+
+                <dt class="col-sm-3">Full name</dt>
+                <dd class="col-sm-9">@CurrentUser.FullName</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@CurrentUser.Email</dd>
+
+                <dt class="col-sm-3">User Id</dt>
+                <dd class="col-sm-9 font-monospace small">@CurrentUser.Id</dd>
+
+                <dt class="col-sm-3">Roles</dt>
+                <dd class="col-sm-9">
+                    @if (myRoles.Count == 0)
+                    {
+                        <span class="text-muted">No role</span>
+                    }
+                    @foreach (Role r in myRoles)
+                    {
+                        <span class="badge bg-secondary me-1">@r.Title</span>
+                    }
+                </dd>
+            </dl>
+
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfPanel Title="Change my password">
+        <ChildContent>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Current password</label>
+                    <input type="password" class="form-control" @bind="oldPassword" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">New password</label>
+                    <input type="password" class="form-control" @bind="newPassword" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Confirm new password</label>
+                    <input type="password" class="form-control" @bind="confirmPassword" />
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="button" class="btn btn-primary" @onclick="ChangeMyPasswordAsync">Change my password</button>
+            </div>
+            <IdfAlerts Errors="passwordErrors" SuccessMessage="@passwordSuccess" />
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfPanel Title="My permissions" Description="Actions allowed by the roles you hold.">
+        <ChildContent>
+            @if (myPermissions.Count == 0)
+            {
+                <div class="text-muted">You have no permission.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Entity</th><th>Allowed actions</th></tr></thead>
+                        <tbody>
+                            @foreach (EntityAllowedActionsModel e in myPermissions)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@(e.Entity is null ? "" : e.Entity.Title)</td>
+                                    <td>
+                                        @foreach (PermissionType a in e.AllowedActions)
+                                        {
+                                            <span class="badge bg-info text-dark me-1">@a.Title</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfPanel Title="My sessions" Description="Tokens issued for your account and stored in the database.">
+        <Toolbar>
+            @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+            {
+                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => showRevokeAllConfirm = true">Sign out everywhere</button>
+            }
+        </Toolbar>
+        <ChildContent>
+            @if (IDFManager.TokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                <div class="alert alert-info small">
+                    TokenValidationMode is DecryptOnly, tokens are validated by decryption only.
+                    Revoking a stored token does not prevent its use until it expires.
+                </div>
+            }
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>IP address</th>
+                            <th>Expires</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (myTokens.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-3">No stored token.</td></tr>
+                        }
+                        @foreach (UserToken t in myTokens)
+                        {
+                            <tr>
+                                <td style="max-width:320px;"><IdfSecret Value="@t.Token" /></td>
+                                <td class="small">@t.IPAddress</td>
+                                <td class="small @(t.ExpireDate < DateTime.Now ? "text-danger" : "")">
+                                    @t.ExpireDate.ToString("yyyy-MM-dd HH:mm")
+                                </td>
+                                <td class="text-end">
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                    {
+                                        long tokenId = t.Id;
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RevokeTokenAsync(tokenId)">Revoke</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfConfirm Visible="showRevokeAllConfirm"
+                Title="Sign out everywhere"
+                Message="Revoke every stored token of your account ?"
+                Details="You will have to sign in again on every device."
+                ConfirmText="Revoke all"
+                OnConfirm="RevokeAllAsync"
+                OnCancel="() => showRevokeAllConfirm = false" />
+}
+
+@code {
+    protected override bool IsAdminScreen
+    {
+        get { return false; }
+    }
+
+    private List<Role> myRoles = new();
+    private List<EntityAllowedActionsModel> myPermissions = new();
+    private List<UserToken> myTokens = new();
+
+    private string oldPassword = "";
+    private string newPassword = "";
+    private string confirmPassword = "";
+    private List<string> passwordErrors = new();
+    private string passwordSuccess = "";
+
+    private bool showRevokeAllConfirm;
+
+    protected override Task LoadDataAsync()
+    {
+        if (CurrentUser is null) { return Task.CompletedTask; }
+
+        try { myRoles = IdfAdminData.GetUserRoles(CurrentUser.Id); }
+        catch (Exception) { myRoles = CurrentUser.Roles ?? new List<Role>(); }
+
+        try { myPermissions = IdfAdminData.GetUserPermissions(CurrentUser.Id); }
+        catch (Exception) { myPermissions = new(); }
+
+        try { myTokens = IdfAdminData.GetUserTokens(CurrentUser.Id, true); }
+        catch (Exception) { myTokens = new(); }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task ChangeMyPasswordAsync()
+    {
+        passwordErrors = new();
+        passwordSuccess = "";
+
+        if (string.IsNullOrWhiteSpace(oldPassword)) { passwordErrors.Add("The current password is required"); }
+        if (string.IsNullOrWhiteSpace(newPassword)) { passwordErrors.Add("The new password is required"); }
+        if (newPassword != confirmPassword) { passwordErrors.Add("The new password and its confirmation do not match"); }
+        if (passwordErrors.Count > 0) { return; }
+
+        try
+        {
+            IDFManager.userService.ChangeMyPassword(CurrentUser!.UserName, oldPassword, newPassword, false);
+            passwordSuccess = "Your password has been changed";
+            oldPassword = "";
+            newPassword = "";
+            confirmPassword = "";
+        }
+        catch (Exception ex)
+        {
+            passwordErrors.Add(ex.Message);
+        }
+        await Task.CompletedTask;
+    }
+
+    private async Task RevokeTokenAsync(long tokenId)
+    {
+        await ExecuteAsync(() => IdfAdminData.DeleteUserToken(tokenId), "Token revoked");
+    }
+
+    private async Task RevokeAllAsync()
+    {
+        showRevokeAllConfirm = false;
+        await ExecuteAsync(() => IDFManager.userTokenService.DeleteUserTokens(CurrentUser!.Id), "All your tokens have been revoked");
+    }
+}

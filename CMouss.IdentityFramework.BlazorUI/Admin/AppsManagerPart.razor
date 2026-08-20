@@ -1,0 +1,353 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading apps...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage apps.</div>
+}
+else
+{
+    <IdfPanel Title="Apps" Description="An app is a client application authenticating with an AccessKey and an AccessSecret." IsLoading="IsLoading">
+        <Toolbar>
+            <div class="form-check form-switch me-2">
+                <input class="form-check-input" type="checkbox" id="idf-apps-deleted" checked="@includeDeleted" @onchange="OnIncludeDeletedChangedAsync" />
+                <label class="form-check-label small" for="idf-apps-deleted">Show deleted</label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <button type="button" class="btn btn-sm btn-primary" @onclick="OpenCreate">New app</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Title</th>
+                            <th>Owner</th>
+                            <th>Status</th>
+                            <th>Permission types</th>
+                            <th>Accesses</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (apps.Count == 0)
+                        {
+                            <tr><td colspan="7" class="text-center text-muted py-3">No app defined yet.</td></tr>
+                        }
+                        @foreach (App a in apps)
+                        {
+                            <tr>
+                                <td class="font-monospace small">@a.Id</td>
+                                <td class="fw-semibold">@a.Title</td>
+                                <td>@(a.Owner is null ? a.OwnerId : a.Owner.UserName)</td>
+                                <td>
+                                    @if (a.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                    @if (a.IsDeleted)
+                                    {
+                                        <span class="badge bg-dark ms-1">Deleted</span>
+                                    }
+                                </td>
+                                <td>@CountOf(permissionTypeCounts, a.Id)</td>
+                                <td>@CountOf(accessCounts, a.Id)</td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenEdit(a)">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenPermissionTypes(a)">Permission types</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenAccesses(a)">Accesses</button>
+                                    @if (a.IsDeleted)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => RestoreAsync(a)">Restore</button>
+                                    }
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(a, false)">Delete</button>
+                                        @if (a.IsDeleted)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => AskDelete(a, true)">Purge</button>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </ChildContent>
+    </IdfPanel>
+
+    @* ---------- Create / Edit ---------- *@
+    <IdfModal Visible="showEditor" Title="@(isNew ? "New app" : "Edit app")" OnClose="CloseEditor">
+        <ChildContent>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Id</label>
+                    <div class="input-group">
+                        <input class="form-control font-monospace" @bind="editorId" disabled="@(!isNew)" />
+                        @if (isNew)
+                        {
+                            <button type="button" class="btn btn-outline-secondary" @onclick="GenerateId">Generate</button>
+                        }
+                    </div>
+                    <div class="form-text">The Id is the AppId used by the client application.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" @bind="editorTitle" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Owner</label>
+                    <select class="form-select" @bind="editorOwnerId">
+                        <option value="">Select a user</option>
+                        @foreach (User u in users)
+                        {
+                            <option value="@u.Id">@u.UserName (@u.Email)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-center">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="idf-app-active" @bind="editorIsActive" />
+                        <label class="form-check-label" for="idf-app-active">Active</label>
+                    </div>
+                </div>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseEditor">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- App permission types ---------- *@
+    <IdfModal Visible="showPermissionTypes" Title="@("Permission types of " + selectedTitle)" Size="xl" OnClose="ClosePermissionTypes">
+        <ChildContent>
+            <AppPermissionTypesManagerPart AppId="@selectedId" RequireAdminRole="RequireAdminRole" OnChanged="RefreshAsync" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="ClosePermissionTypes">Close</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- App accesses ---------- *@
+    <IdfModal Visible="showAccesses" Title="@("Accesses of " + selectedTitle)" Size="xl" OnClose="CloseAccesses">
+        <ChildContent>
+            <AppAccessManagerPart AppId="@selectedId" RequireAdminRole="RequireAdminRole" OnChanged="RefreshAsync" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseAccesses">Close</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="@(hardDelete ? "Purge app" : "Delete app")"
+                Message="@((hardDelete ? "Permanently remove " : "Delete ") + selectedTitle + " ?")"
+                Details="@(hardDelete
+                    ? "The app, its permission types and all of its accesses are permanently removed."
+                    : "The app is flagged as deleted, deactivated, and all of its accesses are revoked.")"
+                ConfirmText="@(hardDelete ? "Purge" : "Delete")"
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    private List<App> apps = new();
+    private List<User> users = new();
+    private Dictionary<string, int> permissionTypeCounts = new();
+    private Dictionary<string, int> accessCounts = new();
+    private bool includeDeleted;
+
+    private bool showEditor;
+    private bool isNew;
+    private string editorId = "";
+    private string editorTitle = "";
+    private string editorOwnerId = "";
+    private bool editorIsActive = true;
+    private List<string> editorErrors = new();
+
+    private bool showPermissionTypes;
+    private bool showAccesses;
+    private bool showDeleteConfirm;
+    private bool hardDelete;
+    private string selectedId = "";
+    private string selectedTitle = "";
+
+    protected override Task LoadDataAsync()
+    {
+        apps = IdfAdminData.GetApps(includeDeleted);
+        users = IdfAdminData.GetUsers(false);
+
+        permissionTypeCounts = new();
+        accessCounts = new();
+        foreach (App a in apps)
+        {
+            permissionTypeCounts[a.Id] = IdfAdminData.GetAppPermissionTypes(a.Id).Count;
+            accessCounts[a.Id] = IdfAdminData.GetAppAccesses(a.Id, null).Count;
+        }
+        return Task.CompletedTask;
+    }
+
+    private static int CountOf(Dictionary<string, int> source, string key)
+    {
+        return source.ContainsKey(key) ? source[key] : 0;
+    }
+
+    private async Task OnIncludeDeletedChangedAsync(ChangeEventArgs args)
+    {
+        includeDeleted = args.Value is bool ? (bool)args.Value : false;
+        await RefreshAsync();
+    }
+
+    #region Create / Edit
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = true;
+        editorId = Helpers.GenerateId();
+        editorTitle = "";
+        editorOwnerId = CurrentUserId;
+        editorIsActive = true;
+        showEditor = true;
+    }
+
+    private void GenerateId()
+    {
+        editorId = Helpers.GenerateId();
+    }
+
+    private void OpenEdit(App a)
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = false;
+        editorId = a.Id;
+        editorTitle = a.Title;
+        editorOwnerId = a.OwnerId;
+        editorIsActive = a.IsActive;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(editorId)) { editorErrors.Add("Id is required"); }
+        if (string.IsNullOrWhiteSpace(editorTitle)) { editorErrors.Add("Title is required"); }
+        if (string.IsNullOrWhiteSpace(editorOwnerId)) { editorErrors.Add("Owner is required"); }
+        if (editorErrors.Count > 0) { return; }
+
+        string id = editorId;
+        string title = editorTitle;
+        string ownerId = editorOwnerId;
+        bool isActive = editorIsActive;
+
+        bool ok;
+        if (isNew)
+        {
+            ok = await ExecuteAsync(() =>
+            {
+                IdfAdminData.AppService.Create(id, title, ownerId);
+                //AppService.Create always stores IsActive = false
+                if (isActive) { IdfAdminData.AppService.Update(id, title, true); }
+            }, "App created");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() =>
+            {
+                IdfAdminData.AppService.Update(id, title, isActive);
+                IdfAdminData.ChangeAppOwner(id, ownerId);
+            }, "App updated");
+        }
+
+        if (ok) { showEditor = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Delete / Restore
+
+    private void AskDelete(App a, bool hard)
+    {
+        ClearMessages();
+        selectedId = a.Id;
+        selectedTitle = a.Title;
+        hardDelete = hard;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        string id = selectedId;
+        if (hardDelete)
+        {
+            await ExecuteAsync(() => IdfAdminData.HardDeleteApp(id), "App permanently removed");
+        }
+        else
+        {
+            await ExecuteAsync(() => IdfAdminData.DeleteApp(id), "App deleted");
+        }
+    }
+
+    private async Task RestoreAsync(App a)
+    {
+        string id = a.Id;
+        await ExecuteAsync(() => IdfAdminData.RestoreApp(id), "App restored");
+    }
+
+    #endregion
+
+    #region Sub screens
+
+    private void OpenPermissionTypes(App a)
+    {
+        ClearMessages();
+        selectedId = a.Id;
+        selectedTitle = a.Title;
+        showPermissionTypes = true;
+    }
+
+    private void ClosePermissionTypes()
+    {
+        showPermissionTypes = false;
+    }
+
+    private void OpenAccesses(App a)
+    {
+        ClearMessages();
+        selectedId = a.Id;
+        selectedTitle = a.Title;
+        showAccesses = true;
+    }
+
+    private void CloseAccesses()
+    {
+        showAccesses = false;
+    }
+
+    #endregion
+}

@@ -1,0 +1,286 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading user tokens...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage user tokens.</div>
+}
+else
+{
+    <IdfPanel Title="User tokens" Description="Tokens issued to users and stored in the database." IsLoading="IsLoading">
+        <Toolbar>
+            <div class="form-check form-switch me-2">
+                <input class="form-check-input" type="checkbox" id="idf-tokens-expired" checked="@includeExpired" @onchange="OnIncludeExpiredChangedAsync" />
+                <label class="form-check-label small" for="idf-tokens-expired">Show expired</label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+            {
+                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => showCleanConfirm = true">Purge expired</button>
+            }
+            <button type="button" class="btn btn-sm btn-primary" @onclick="OpenCreate">Issue token</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            @if (IDFManager.TokenValidationMode == TokenValidationMode.DecryptOnly)
+            {
+                <div class="alert alert-info small">
+                    TokenValidationMode is DecryptOnly: tokens are accepted as long as they decrypt and
+                    have not expired, so revoking a stored token here does not block it. Switch to
+                    DecryptAndValidate if you need real revocation.
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(justIssuedToken))
+            {
+                <div class="alert alert-warning">
+                    <div class="fw-semibold mb-2">Token issued, copy it now.</div>
+                    <IdfSecret Value="@justIssuedToken" />
+                </div>
+            }
+
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">User</label>
+                    <select class="form-select form-select-sm" value="@filterUserId" @onchange="OnUserFilterChangedAsync">
+                        <option value="">All users</option>
+                        @foreach (User u in users)
+                        {
+                            <option value="@u.Id">@u.UserName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    @if (!string.IsNullOrEmpty(filterUserId) && IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => showRevokeAllConfirm = true">
+                            Revoke every token of this user
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Token</th>
+                            <th>IP address</th>
+                            <th>Expires</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (tokens.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">No token found.</td></tr>
+                        }
+                        @foreach (UserToken t in tokens)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@(t.User is null ? Shorten(t.UserId, 10) : t.User.UserName)</td>
+                                <td style="min-width:280px;"><IdfSecret Value="@t.Token" /></td>
+                                <td class="small">@t.IPAddress</td>
+                                <td class="small text-nowrap">
+                                    @t.ExpireDate.ToString("yyyy-MM-dd HH:mm")
+                                    @if (t.ExpireDate < DateTime.Now)
+                                    {
+                                        <span class="badge bg-danger ms-1">Expired</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                    {
+                                        long tokenId = t.Id;
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RevokeAsync(tokenId)">Revoke</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfModal Visible="showCreate" Title="Issue a user token" OnClose="CloseCreate">
+        <ChildContent>
+            <div class="mb-3">
+                <label class="form-label">User</label>
+                <select class="form-select" @bind="createUserId">
+                    <option value="">Select a user</option>
+                    @foreach (User u in users)
+                    {
+                        <option value="@u.Id">@u.UserName (@u.Email)</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">IP address (optional)</label>
+                <input class="form-control" @bind="createIPAddress" placeholder="10.0.0.1" />
+            </div>
+            <label class="form-label">Lifetime</label>
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="input-group">
+                        <input type="number" min="0" class="form-control" @bind="lifeDays" />
+                        <span class="input-group-text">days</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="input-group">
+                        <input type="number" min="0" class="form-control" @bind="lifeHours" />
+                        <span class="input-group-text">hours</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="input-group">
+                        <input type="number" min="0" class="form-control" @bind="lifeMinutes" />
+                        <span class="input-group-text">min</span>
+                    </div>
+                </div>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseCreate">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="CreateAsync">Issue token</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showRevokeAllConfirm"
+                Title="Revoke every token"
+                Message="Revoke every stored token of this user ?"
+                Details="The user has to sign in again on every device."
+                ConfirmText="Revoke all"
+                OnConfirm="RevokeAllAsync"
+                OnCancel="() => showRevokeAllConfirm = false" />
+
+    <IdfConfirm Visible="showCleanConfirm"
+                Title="Purge expired tokens"
+                Message="Remove every expired token ?"
+                Details="Only tokens whose expiry date is in the past are removed."
+                ConfirmText="Purge"
+                OnConfirm="CleanExpiredAsync"
+                OnCancel="() => showCleanConfirm = false" />
+}
+
+@code {
+    /// <summary>When set, the component only manages the tokens of this user.</summary>
+    [Parameter] public string UserId { get; set; } = "";
+
+    private List<UserToken> tokens = new();
+    private List<User> users = new();
+    private string filterUserId = "";
+    private bool includeExpired = true;
+
+    private bool showCreate;
+    private string createUserId = "";
+    private string createIPAddress = "";
+    private int lifeDays;
+    private int lifeHours;
+    private int lifeMinutes;
+    private string justIssuedToken = "";
+    private List<string> editorErrors = new();
+
+    private bool showRevokeAllConfirm;
+    private bool showCleanConfirm;
+
+    protected override Task LoadDataAsync()
+    {
+        users = IdfAdminData.GetUsers(false);
+        if (!string.IsNullOrEmpty(UserId)) { filterUserId = UserId; }
+        tokens = IdfAdminData.GetUserTokens(filterUserId, includeExpired);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnUserFilterChangedAsync(ChangeEventArgs args)
+    {
+        filterUserId = args.Value is null ? "" : args.Value.ToString() ?? "";
+        await RefreshAsync();
+    }
+
+    private async Task OnIncludeExpiredChangedAsync(ChangeEventArgs args)
+    {
+        includeExpired = args.Value is bool ? (bool)args.Value : false;
+        await RefreshAsync();
+    }
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        justIssuedToken = "";
+        createUserId = string.IsNullOrEmpty(filterUserId) ? "" : filterUserId;
+        createIPAddress = "";
+        LifeTime lifeTime = IDFBlazorUIAdminConfig.GetDefaultUserTokenLifeTime();
+        lifeDays = lifeTime.Days;
+        lifeHours = lifeTime.Hours;
+        lifeMinutes = lifeTime.Minutes;
+        showCreate = true;
+    }
+
+    private void CloseCreate()
+    {
+        showCreate = false;
+        editorErrors = new();
+    }
+
+    private async Task CreateAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(createUserId)) { editorErrors.Add("User is required"); }
+        if (lifeDays <= 0 && lifeHours <= 0 && lifeMinutes <= 0) { editorErrors.Add("The lifetime must be greater than zero"); }
+        if (editorErrors.Count > 0) { return; }
+
+        string userId = createUserId;
+        string ip = createIPAddress ?? "";
+        LifeTime lifeTime = new LifeTime(lifeDays, lifeHours, lifeMinutes);
+
+        bool ok = await ExecuteAsync(() =>
+        {
+            UserToken created = IDFManager.userTokenService.Create(userId, lifeTime, ip);
+            justIssuedToken = created.Token;
+        }, "Token issued");
+
+        if (ok) { showCreate = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    private async Task RevokeAsync(long tokenId)
+    {
+        await ExecuteAsync(() => IdfAdminData.DeleteUserToken(tokenId), "Token revoked");
+    }
+
+    private async Task RevokeAllAsync()
+    {
+        showRevokeAllConfirm = false;
+        if (string.IsNullOrEmpty(filterUserId)) { return; }
+        string userId = filterUserId;
+        int removed = 0;
+        bool ok = await ExecuteAsync(() =>
+        {
+            removed = IDFManager.userTokenService.DeleteUserTokens(userId);
+        }, "Tokens revoked");
+        if (ok) { SetSuccess(removed + " token(s) revoked"); }
+    }
+
+    private async Task CleanExpiredAsync()
+    {
+        showCleanConfirm = false;
+        int removed = 0;
+        bool ok = await ExecuteAsync(() =>
+        {
+            removed = IDFManager.userTokenService.CleanExpiredUserTokens();
+        }, "Expired tokens removed");
+        if (ok) { SetSuccess(removed + " expired token(s) removed"); }
+    }
+}

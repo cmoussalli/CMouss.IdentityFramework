@@ -1,0 +1,182 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading actions...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage actions.</div>
+}
+else
+{
+    <IdfPanel Title="Actions (permission types)" Description="An action is what can be done on an entity, for example Search, Details, Create, Update or Delete." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <button type="button" class="btn btn-sm btn-primary" @onclick="OpenCreate">New action</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Title</th>
+                            <th>Permissions</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (permissionTypes.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-3">No action defined yet.</td></tr>
+                        }
+                        @foreach (PermissionType p in permissionTypes)
+                        {
+                            <tr>
+                                <td class="font-monospace small">@p.Id</td>
+                                <td class="fw-semibold">@p.Title</td>
+                                <td>@PermissionCount(p.Id)</td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenEdit(p)">Edit</button>
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(p)">Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </ChildContent>
+    </IdfPanel>
+
+    <IdfModal Visible="showEditor" Title="@(isNew ? "New action" : "Edit action")" Size="" OnClose="CloseEditor">
+        <ChildContent>
+            <div class="mb-3">
+                <label class="form-label">Id</label>
+                <input class="form-control" @bind="editorId" disabled="@(!isNew)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input class="form-control" @bind="editorTitle" />
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseEditor">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Delete action"
+                Message="@("Delete the action " + selectedTitle + " ?")"
+                Details="Every permission using this action is removed too."
+                OnConfirm="DeleteAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    private List<PermissionType> permissionTypes = new();
+    private Dictionary<string, int> permissionCounts = new();
+
+    private bool showEditor;
+    private bool isNew;
+    private string editorId = "";
+    private string editorTitle = "";
+    private List<string> editorErrors = new();
+
+    private bool showDeleteConfirm;
+    private string selectedId = "";
+    private string selectedTitle = "";
+
+    protected override Task LoadDataAsync()
+    {
+        permissionTypes = IdfAdminData.GetPermissionTypes();
+        permissionCounts = new();
+        foreach (PermissionType p in permissionTypes)
+        {
+            permissionCounts[p.Id] = IdfAdminData.GetPermissions(null, null, p.Id).Count;
+        }
+        return Task.CompletedTask;
+    }
+
+    private int PermissionCount(string permissionTypeId)
+    {
+        return permissionCounts.ContainsKey(permissionTypeId) ? permissionCounts[permissionTypeId] : 0;
+    }
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = true;
+        editorId = "";
+        editorTitle = "";
+        showEditor = true;
+    }
+
+    private void OpenEdit(PermissionType p)
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNew = false;
+        editorId = p.Id;
+        editorTitle = p.Title;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(editorId)) { editorErrors.Add("Id is required"); }
+        if (string.IsNullOrWhiteSpace(editorTitle)) { editorErrors.Add("Title is required"); }
+        if (editorErrors.Count > 0) { return; }
+
+        bool ok;
+        if (isNew)
+        {
+            if (permissionTypes.Any(o => string.Equals(o.Id, editorId, StringComparison.OrdinalIgnoreCase)))
+            {
+                editorErrors.Add("This Id already exists");
+                return;
+            }
+            ok = await ExecuteAsync(() => IDFManager.permissionTypeService.Create(editorId, editorTitle), "Action created");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() => IDFManager.permissionTypeService.Update(editorId, editorTitle), "Action updated");
+        }
+
+        if (ok) { showEditor = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    private void AskDelete(PermissionType p)
+    {
+        ClearMessages();
+        selectedId = p.Id;
+        selectedTitle = p.Title;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        showDeleteConfirm = false;
+        bool ok = await ExecuteAsync(() => IdfAdminData.DeletePermissionType(selectedId), "Action deleted");
+        if (ok) { IDFManager.RefreshIDFStorage(); }
+    }
+}

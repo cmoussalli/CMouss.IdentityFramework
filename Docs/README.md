@@ -52,8 +52,10 @@ Blazor Server components for authentication UI.
 - Secure token storage
 - Customizable labels and navigation
 - Cascading authentication state
+- Full management UI: users, roles, entities, actions, permissions, apps, app accesses, tokens
 
 [Read Full Documentation →](CMouss.IdentityFramework.BlazorUI.md)
+[Management Components →](BlazorUI-Management-Components.md)
 
 ## Quick Start
 
@@ -105,6 +107,7 @@ db.InsertMasterData();
 - [CMouss.IdentityFramework](CMouss.IdentityFramework.md) - Core framework documentation
 - [CMouss.IdentityFramework.APIServer](CMouss.IdentityFramework.APIServer.md) - API server documentation
 - [CMouss.IdentityFramework.BlazorUI](CMouss.IdentityFramework.BlazorUI.md) - Blazor UI documentation
+- [Blazor UI Management Components](BlazorUI-Management-Components.md) - Admin screens for every framework function
 
 ## Architecture
 

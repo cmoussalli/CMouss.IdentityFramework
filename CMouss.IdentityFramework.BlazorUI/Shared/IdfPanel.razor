@@ -1,0 +1,30 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Shared
+
+@* Standard frame of a management screen: title, toolbar, busy indicator and body. *@
+<div class="card idf-panel mb-3">
+    <div class="card-header d-flex flex-wrap align-items-center gap-2">
+        <div class="flex-grow-1">
+            <span class="fw-semibold">@Title</span>
+            @if (!string.IsNullOrEmpty(Description))
+            {
+                <div class="text-muted small">@Description</div>
+            }
+        </div>
+        @if (IsLoading)
+        {
+            <span class="spinner-border spinner-border-sm text-secondary me-2" role="status" aria-hidden="true"></span>
+        }
+        @Toolbar
+    </div>
+    <div class="card-body">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public RenderFragment? Toolbar { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

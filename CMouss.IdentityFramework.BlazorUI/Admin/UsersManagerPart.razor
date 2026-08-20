@@ -1,0 +1,570 @@
+@namespace CMouss.IdentityFramework.BlazorUI.Admin
+@inherits IdfAdminComponentBase
+
+@if (!IsReady)
+{
+    <div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading users...</div>
+}
+else if (!IsAuthorized)
+{
+    <div class="alert alert-warning">You are not allowed to manage users.</div>
+}
+else
+{
+    <IdfPanel Title="Users" Description="Create, update, lock, delete users and manage their roles." IsLoading="IsLoading">
+        <Toolbar>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="RefreshAsync">Refresh</button>
+            <button type="button" class="btn btn-sm btn-primary" @onclick="OpenCreate">New user</button>
+        </Toolbar>
+        <ChildContent>
+
+            <IdfAlerts Errors="Errors" SuccessMessage="@SuccessMessage" OnDismiss="ClearMessages" />
+
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Username</label>
+                    <input class="form-control form-control-sm" @bind="filter.UserName" @bind:event="oninput" @onkeyup="OnSearchKey" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Full name</label>
+                    <input class="form-control form-control-sm" @bind="filter.FullName" @bind:event="oninput" @onkeyup="OnSearchKey" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Email</label>
+                    <input class="form-control form-control-sm" @bind="filter.Email" @bind:event="oninput" @onkeyup="OnSearchKey" />
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <select class="form-select form-select-sm" @bind="statusFilter">
+                        <option value="">Any status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="locked">Locked</option>
+                        <option value="unlocked">Unlocked</option>
+                    </select>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="SearchAsync">Search</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Full name</th>
+                            <th>Email</th>
+                            <th>Roles</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (users.Count == 0)
+                        {
+                            <tr><td colspan="7" class="text-center text-muted py-3">No user found.</td></tr>
+                        }
+                        @foreach (User u in users)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@u.UserName</td>
+                                <td>@u.FullName</td>
+                                <td>@u.Email</td>
+                                <td>
+                                    @foreach (Role r in RolesOf(u.Id))
+                                    {
+                                        <span class="badge bg-secondary me-1">@r.Title</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (u.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                    @if (u.IsLocked)
+                                    {
+                                        <span class="badge bg-danger ms-1">Locked</span>
+                                    }
+                                    @if (u.IsDeleted)
+                                    {
+                                        <span class="badge bg-dark ms-1">Deleted</span>
+                                    }
+                                </td>
+                                <td class="small text-muted">@u.CreateDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenEdit(u)">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenRoles(u)">Roles</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenPassword(u)">Password</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenPermissions(u)">Permissions</button>
+                                    @if (u.IsLocked)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => UnlockAsync(u)">Unlock</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="() => LockAsync(u)">Lock</button>
+                                    }
+                                    @if (IDFBlazorUIAdminConfig.AllowDeleteOperations)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(u)">Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(paging.PageNumber <= 1)" @onclick="PreviousPageAsync">Previous</button>
+                <span class="small text-muted">Page @paging.PageNumber of @TotalPages (@totalCount users)</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(paging.PageNumber >= TotalPages)" @onclick="NextPageAsync">Next</button>
+            </div>
+
+        </ChildContent>
+    </IdfPanel>
+
+    @* ---------- Create / Edit ---------- *@
+    <IdfModal Visible="showEditor" Title="@(isNewUser ? "New user" : "Edit user")" OnClose="CloseEditor">
+        <ChildContent>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Username</label>
+                    <input class="form-control" @bind="editorUserName" disabled="@(!isNewUser)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Full name</label>
+                    <input class="form-control" @bind="editorFullName" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" @bind="editorEmail" />
+                </div>
+                @if (isNewUser)
+                {
+                    <div class="col-md-6">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" @bind="editorPassword" />
+                    </div>
+                }
+                <div class="col-md-6 d-flex gap-4 align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="idf-user-active" @bind="editorIsActive" />
+                        <label class="form-check-label" for="idf-user-active">Active</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="idf-user-locked" @bind="editorIsLocked" />
+                        <label class="form-check-label" for="idf-user-locked">Locked</label>
+                    </div>
+                </div>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseEditor">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="SaveUserAsync">Save</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Roles ---------- *@
+    <IdfModal Visible="showRoles" Title="@("Roles of " + selectedUserName)" OnClose="CloseRoles">
+        <ChildContent>
+            @if (allRoles.Count == 0)
+            {
+                <div class="text-muted">No role defined yet.</div>
+            }
+            <div class="list-group">
+                @foreach (Role r in allRoles)
+                {
+                    bool granted = selectedUserRoleIds.Contains(r.Id);
+                    <div class="list-group-item d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <span class="fw-semibold">@r.Title</span>
+                            <span class="text-muted small ms-2">@r.Id</span>
+                        </div>
+                        @if (granted)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RevokeRoleAsync(r.Id)">Revoke</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => GrantRoleAsync(r.Id)">Grant</button>
+                        }
+                    </div>
+                }
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="CloseRoles">Close</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Password ---------- *@
+    <IdfModal Visible="showPassword" Title="@("Change password of " + selectedUserName)" Size="" OnClose="ClosePassword">
+        <ChildContent>
+            <div class="mb-3">
+                <label class="form-label">New password</label>
+                <input type="password" class="form-control" @bind="newPassword" />
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="idf-user-pk" @bind="changePrivateKey" />
+                <label class="form-check-label" for="idf-user-pk">
+                    Regenerate the private key (invalidates the stored password encryption)
+                </label>
+            </div>
+            <IdfAlerts Errors="editorErrors" />
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="ClosePassword">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="ChangePasswordAsync">Change password</button>
+        </Footer>
+    </IdfModal>
+
+    @* ---------- Permissions ---------- *@
+    <IdfModal Visible="showPermissions" Title="@("Permissions of " + selectedUserName)" OnClose="ClosePermissions">
+        <ChildContent>
+            @if (userPermissions.Count == 0)
+            {
+                <div class="text-muted">This user has no permission, grant a role first.</div>
+            }
+            <table class="table table-sm">
+                <thead><tr><th>Entity</th><th>Allowed actions</th></tr></thead>
+                <tbody>
+                    @foreach (EntityAllowedActionsModel e in userPermissions)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@(e.Entity is null ? "" : e.Entity.Title)</td>
+                            <td>
+                                @foreach (PermissionType a in e.AllowedActions)
+                                {
+                                    <span class="badge bg-info text-dark me-1">@a.Title</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" @onclick="ClosePermissions">Close</button>
+        </Footer>
+    </IdfModal>
+
+    <IdfConfirm Visible="showDeleteConfirm"
+                Title="Delete user"
+                Message="@("Delete " + selectedUserName + " ?")"
+                Details="The user and all of its tokens are permanently removed."
+                OnConfirm="DeleteUserAsync"
+                OnCancel="() => showDeleteConfirm = false" />
+}
+
+@code {
+    private List<User> users = new();
+    private List<Role> allRoles = new();
+    private Dictionary<string, List<Role>> userRoles = new();
+
+    private UsersSearch filter = new();
+    private Paging paging = new();
+    private string statusFilter = "";
+    private int totalCount;
+
+    private int TotalPages
+    {
+        get
+        {
+            if (paging.PageSize <= 0) { return 1; }
+            int pages = (int)Math.Ceiling((double)totalCount / paging.PageSize);
+            return pages < 1 ? 1 : pages;
+        }
+    }
+
+    //Editor state
+    private bool showEditor;
+    private bool isNewUser;
+    private string editorId = "";
+    private string editorUserName = "";
+    private string editorFullName = "";
+    private string editorEmail = "";
+    private string editorPassword = "";
+    private bool editorIsActive = true;
+    private bool editorIsLocked;
+    private List<string> editorErrors = new();
+
+    //Secondary dialogs
+    private bool showRoles;
+    private bool showPassword;
+    private bool showPermissions;
+    private bool showDeleteConfirm;
+    private string selectedUserId = "";
+    private string selectedUserName = "";
+    private List<string> selectedUserRoleIds = new();
+    private List<EntityAllowedActionsModel> userPermissions = new();
+    private string newPassword = "";
+    private bool changePrivateKey;
+
+    protected override Task LoadDataAsync()
+    {
+        paging.PageSize = IDFBlazorUIAdminConfig.PageSize;
+        ApplyStatusFilter();
+
+        totalCount = IdfAdminData.CountUsers(filter);
+        if (paging.PageNumber > TotalPages) { paging.PageNumber = TotalPages; }
+
+        users = IdfAdminData.SearchUsers(paging, filter);
+        allRoles = IdfAdminData.GetRoles();
+
+        userRoles = new();
+        foreach (User u in users)
+        {
+            try { userRoles[u.Id] = IdfAdminData.GetUserRoles(u.Id); }
+            catch (Exception) { userRoles[u.Id] = new(); }
+        }
+        return Task.CompletedTask;
+    }
+
+    private void ApplyStatusFilter()
+    {
+        filter.IsActive = null;
+        filter.IsLocked = null;
+        if (statusFilter == "active") { filter.IsActive = true; }
+        if (statusFilter == "inactive") { filter.IsActive = false; }
+        if (statusFilter == "locked") { filter.IsLocked = true; }
+        if (statusFilter == "unlocked") { filter.IsLocked = false; }
+    }
+
+    private List<Role> RolesOf(string userId)
+    {
+        return userRoles.ContainsKey(userId) ? userRoles[userId] : new List<Role>();
+    }
+
+    private async Task OnSearchKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") { await SearchAsync(); }
+    }
+
+    private async Task SearchAsync()
+    {
+        paging.PageNumber = 1;
+        await RefreshAsync();
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (paging.PageNumber > 1) { paging.PageNumber--; await RefreshAsync(); }
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (paging.PageNumber < TotalPages) { paging.PageNumber++; await RefreshAsync(); }
+    }
+
+    #region Create / Edit
+
+    private void OpenCreate()
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNewUser = true;
+        editorId = "";
+        editorUserName = "";
+        editorFullName = "";
+        editorEmail = "";
+        editorPassword = "";
+        editorIsActive = IDFManager.IsActiveByDefault;
+        editorIsLocked = IDFManager.IsLockedByDefault;
+        showEditor = true;
+    }
+
+    private void OpenEdit(User u)
+    {
+        ClearMessages();
+        editorErrors = new();
+        isNewUser = false;
+        editorId = u.Id;
+        editorUserName = u.UserName;
+        editorFullName = u.FullName;
+        editorEmail = u.Email;
+        editorPassword = "";
+        editorIsActive = u.IsActive;
+        editorIsLocked = u.IsLocked;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editorErrors = new();
+    }
+
+    private async Task SaveUserAsync()
+    {
+        editorErrors = new();
+        if (isNewUser && string.IsNullOrWhiteSpace(editorUserName)) { editorErrors.Add("Username is required"); }
+        if (isNewUser && string.IsNullOrWhiteSpace(editorPassword)) { editorErrors.Add("Password is required"); }
+        if (string.IsNullOrWhiteSpace(editorEmail)) { editorErrors.Add("Email is required"); }
+        if (editorErrors.Count > 0) { return; }
+
+        bool ok;
+        if (isNewUser)
+        {
+            ok = await ExecuteAsync(() =>
+            {
+                IDFManager.userService.Create(editorUserName, editorPassword, editorFullName, editorEmail, editorIsLocked, editorIsActive);
+            }, "User created");
+        }
+        else
+        {
+            ok = await ExecuteAsync(() =>
+            {
+                IDFManager.userService.Update(editorId, editorFullName, editorEmail, editorIsLocked, editorIsActive);
+            }, "User updated");
+        }
+
+        if (ok) { showEditor = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Lock / Delete
+
+    private async Task LockAsync(User u)
+    {
+        await ExecuteAsync(() => IDFManager.userService.Lock(u.Id), "User locked");
+    }
+
+    private async Task UnlockAsync(User u)
+    {
+        await ExecuteAsync(() => IDFManager.userService.UnLock(u.Id), "User unlocked");
+    }
+
+    private void AskDelete(User u)
+    {
+        ClearMessages();
+        selectedUserId = u.Id;
+        selectedUserName = u.UserName;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteUserAsync()
+    {
+        showDeleteConfirm = false;
+        await ExecuteAsync(() => IDFManager.userService.Delete(selectedUserId), "User deleted");
+    }
+
+    #endregion
+
+    #region Roles
+
+    private void OpenRoles(User u)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedUserId = u.Id;
+        selectedUserName = u.UserName;
+        LoadSelectedUserRoles();
+        showRoles = true;
+    }
+
+    private void LoadSelectedUserRoles()
+    {
+        try
+        {
+            selectedUserRoleIds = IdfAdminData.GetUserRoles(selectedUserId).Select(o => o.Id).ToList();
+        }
+        catch (Exception ex)
+        {
+            selectedUserRoleIds = new();
+            editorErrors.Add(ex.Message);
+        }
+    }
+
+    private void CloseRoles()
+    {
+        showRoles = false;
+        editorErrors = new();
+    }
+
+    private async Task GrantRoleAsync(string roleId)
+    {
+        editorErrors = new();
+        bool ok = await ExecuteAsync(() => IDFManager.userService.GrantRole(selectedUserId, roleId), "Role granted");
+        if (!ok) { editorErrors = new List<string>(Errors); }
+        LoadSelectedUserRoles();
+    }
+
+    private async Task RevokeRoleAsync(string roleId)
+    {
+        editorErrors = new();
+        bool ok = await ExecuteAsync(() => IDFManager.userService.RevokeRole(selectedUserId, roleId), "Role revoked");
+        if (!ok) { editorErrors = new List<string>(Errors); }
+        LoadSelectedUserRoles();
+    }
+
+    #endregion
+
+    #region Password
+
+    private void OpenPassword(User u)
+    {
+        ClearMessages();
+        editorErrors = new();
+        selectedUserId = u.Id;
+        selectedUserName = u.UserName;
+        newPassword = "";
+        changePrivateKey = false;
+        showPassword = true;
+    }
+
+    private void ClosePassword()
+    {
+        showPassword = false;
+        editorErrors = new();
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        editorErrors = new();
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            editorErrors.Add("The new password is required");
+            return;
+        }
+        bool ok = await ExecuteAsync(() =>
+            IDFManager.userService.ChangePassword(selectedUserId, newPassword, changePrivateKey), "Password changed");
+        if (ok) { showPassword = false; }
+        else { editorErrors = new List<string>(Errors); }
+    }
+
+    #endregion
+
+    #region Permissions
+
+    private void OpenPermissions(User u)
+    {
+        ClearMessages();
+        selectedUserId = u.Id;
+        selectedUserName = u.UserName;
+        try
+        {
+            userPermissions = IdfAdminData.GetUserPermissions(u.Id);
+        }
+        catch (Exception ex)
+        {
+            userPermissions = new();
+            AddError(ex);
+        }
+        showPermissions = true;
+    }
+
+    private void ClosePermissions()
+    {
+        showPermissions = false;
+    }
+
+    #endregion
+}
