@@ -352,3 +352,6 @@ MigrationBackup/
 /CMouss.IdentityFramework.APIServer/mydb.db
 /CMouss.IdentityFramework.APIServer/mydb.db-shm
 /CMouss.IdentityFramework.APIServer/mydb.db-wal
+
+# Claude Code local files
+.claude/
