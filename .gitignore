@@ -355,3 +355,123 @@ MigrationBackup/
 
 # Claude Code local files
 .claude/
+
+# === BEGIN Visual Studio .gitignore (github/gitignore VisualStudio.gitignore) ===
+# Source: https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+# Patterns already present above this block are intentionally omitted.
+
+# User-specific files
+*.env
+
+[Dd]ebug/x64/
+[Dd]ebugPublic/x64/
+[Rr]elease/x64/
+[Rr]eleases/x64/
+bin/x64/
+obj/x64/
+
+[Dd]ebug/x86/
+[Dd]ebugPublic/x86/
+[Rr]elease/x86/
+[Rr]eleases/x86/
+bin/x86/
+obj/x86/
+
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]64[Ee][Cc]/
+[Oo]ut/
+
+# Build results on 'Bin' directories
+**/[Bb]in/*
+# Uncomment if you have tasks that rely on *.refresh files to move binaries
+# (https://github.com/github/gitignore/pull/3736)
+#!**/[Bb]in/*.refresh
+
+# MSTest test Results
+*.trx
+
+# Approval Tests result files
+*.received.*
+
+# .NET Core
+.artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Files built by Visual Studio
+*.idb
+# but not Directory.Build.rsp, as it configures directory-level build defaults
+!Directory.Build.rsp
+*.tlog
+
+# Coverlet is a free, cross platform Code Coverage Tool
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# NCrunch
+.NCrunch_*
+
+# Visual Studio 6 workspace and project file (working project files containing files to include in project)
+*.dsw
+*.dsp
+
+# Paket dependency manager
+**/.paket/paket.exe
+
+# FAKE - F# Make
+**/.fake/
+
+# CodeRush personal settings
+**/.cr/personal
+
+# Python Tools for Visual Studio (PTVS)
+**/__pycache__/
+
+# MSBuild Binary and Structured Log
+MSBuild_Logs/
+
+# AWS SAM Build and Temporary Artifacts folder
+.aws-sam
+
+# MFractors (Xamarin productivity tool) working folder
+**/.mfractor/
+
+# Local History for Visual Studio
+**/.localhistory/
+
+# Visual Studio History (VSHistory) files
+.vshistory/
+
+# Ionide (cross platform F# VS Code tools) working folder
+**/.ionide/
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
+
+# VS Code files for those working on multiple tools
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# Windows Installer files from build outputs
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# === END Visual Studio .gitignore ===
+
+# === Agent tooling (Claude Code / Playwright MCP) ===
+.playwright-mcp/

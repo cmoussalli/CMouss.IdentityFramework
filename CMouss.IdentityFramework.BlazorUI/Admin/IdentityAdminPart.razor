@@ -26,11 +26,18 @@ else if (!IsAuthorized)
         </div>
     </div>
 }
+else if (tabs.Count == 0)
+{
+    <div class="alert alert-secondary">
+        <div class="fw-semibold">Nothing to manage</div>
+        <div class="small">Every management section of this component has been disabled by the host application.</div>
+    </div>
+}
 else
 {
     <div class="idf-admin">
         <ul class="nav nav-tabs mb-3">
-            @foreach (KeyValuePair<string, string> tab in Tabs)
+            @foreach (KeyValuePair<string, string> tab in tabs)
             {
                 string key = tab.Key;
                 <li class="nav-item">
@@ -76,9 +83,6 @@ else
             case "system":
                 <MaintenancePart RequireAdminRole="RequireAdminRole" />
                 break;
-            default:
-                <UsersManagerPart RequireAdminRole="RequireAdminRole" />
-                break;
         }
     </div>
 }
@@ -87,35 +91,121 @@ else
     /// <summary>
     /// Tab opened first: users, roles, entities, actions, permissions, apps,
     /// apppermissiontypes, appaccesses, tokens, attributes or system.
+    /// When that tab is disabled, the first enabled one is opened instead.
     /// </summary>
     [Parameter] public string DefaultTab { get; set; } = "users";
 
-    private static readonly Dictionary<string, string> Tabs = new()
+    #region Disabled sections
+
+    /// <summary>When true, the Users tab is not displayed.</summary>
+    [Parameter] public bool DisableUsers { get; set; } = false;
+
+    /// <summary>When true, the Roles tab is not displayed.</summary>
+    [Parameter] public bool DisableRoles { get; set; } = false;
+
+    /// <summary>When true, the Entities tab is not displayed.</summary>
+    [Parameter] public bool DisableEntities { get; set; } = false;
+
+    /// <summary>When true, the Actions (permission types) tab is not displayed.</summary>
+    [Parameter] public bool DisableActions { get; set; } = false;
+
+    /// <summary>When true, the Permissions tab (role x entity x action) is not displayed.</summary>
+    [Parameter] public bool DisablePermissions { get; set; } = false;
+
+    /// <summary>When true, the Apps tab is not displayed.</summary>
+    [Parameter] public bool DisableApps { get; set; } = false;
+
+    /// <summary>When true, the App permissions tab (app permission types) is not displayed.</summary>
+    [Parameter] public bool DisableAppPermissions { get; set; } = false;
+
+    /// <summary>When true, the App accesses tab is not displayed.</summary>
+    [Parameter] public bool DisableAppAccesses { get; set; } = false;
+
+    /// <summary>When true, the User tokens tab is not displayed.</summary>
+    [Parameter] public bool DisableUserTokens { get; set; } = false;
+
+    /// <summary>When true, the Attributes tab is not displayed.</summary>
+    [Parameter] public bool DisableAttributes { get; set; } = false;
+
+    /// <summary>When true, the System (maintenance) tab is not displayed.</summary>
+    [Parameter] public bool DisableSystem { get; set; } = false;
+
+    #endregion
+
+    private static readonly List<KeyValuePair<string, string>> AllTabs = new()
     {
-        { "users", "Users" },
-        { "roles", "Roles" },
-        { "entities", "Entities" },
-        { "actions", "Actions" },
-        { "permissions", "Permissions" },
-        { "apps", "Apps" },
-        { "apppermissiontypes", "App permissions" },
-        { "appaccesses", "App accesses" },
-        { "tokens", "User tokens" },
-        { "attributes", "Attributes" },
-        { "system", "System" }
+        new("users", "Users"),
+        new("roles", "Roles"),
+        new("entities", "Entities"),
+        new("actions", "Actions"),
+        new("permissions", "Permissions"),
+        new("apps", "Apps"),
+        new("apppermissiontypes", "App permissions"),
+        new("appaccesses", "App accesses"),
+        new("tokens", "User tokens"),
+        new("attributes", "Attributes"),
+        new("system", "System")
     };
 
-    private string activeTab = "users";
+    private Dictionary<string, string> tabs = new();
+    private string activeTab = "";
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        activeTab = string.IsNullOrEmpty(DefaultTab) ? "users" : DefaultTab.ToLower();
-        if (!Tabs.ContainsKey(activeTab)) { activeTab = "users"; }
-        base.OnInitialized();
+        tabs = BuildTabs();
+
+        //Keep the tab the user selected, unless it has just been disabled
+        if (String.IsNullOrEmpty(activeTab) || !tabs.ContainsKey(activeTab))
+        {
+            activeTab = ResolveDefaultTab();
+        }
+
+        base.OnParametersSet();
+    }
+
+    private Dictionary<string, string> BuildTabs()
+    {
+        Dictionary<string, string> result = new();
+        foreach (KeyValuePair<string, string> tab in AllTabs)
+        {
+            if (IsTabEnabled(tab.Key)) { result.Add(tab.Key, tab.Value); }
+        }
+        return result;
+    }
+
+    private bool IsTabEnabled(string key)
+    {
+        switch (key)
+        {
+            case "users": return !DisableUsers;
+            case "roles": return !DisableRoles;
+            case "entities": return !DisableEntities;
+            case "actions": return !DisableActions;
+            case "permissions": return !DisablePermissions;
+            case "apps": return !DisableApps;
+            case "apppermissiontypes": return !DisableAppPermissions;
+            case "appaccesses": return !DisableAppAccesses;
+            case "tokens": return !DisableUserTokens;
+            case "attributes": return !DisableAttributes;
+            case "system": return !DisableSystem;
+            default: return false;
+        }
+    }
+
+    private string ResolveDefaultTab()
+    {
+        if (tabs.Count == 0) { return ""; }
+
+        string requested = String.IsNullOrEmpty(DefaultTab) ? "users" : DefaultTab.Trim().ToLower();
+        if (tabs.ContainsKey(requested)) { return requested; }
+
+        //The requested tab is unknown or disabled, fall back to the first one still available
+        return tabs.Keys.First();
     }
 
     private void SetTab(string tab)
     {
+        if (!tabs.ContainsKey(tab)) { return; }
         activeTab = tab;
     }
 }

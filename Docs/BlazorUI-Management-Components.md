@@ -103,6 +103,47 @@ Common parameters on every management component:
 | `RequireAdminRole` | `true` | Set `false` when the hosting page already checked the access |
 | `OnChanged` | — | Raised after any successful change, to refresh the hosting page |
 
+### Hiding sections of `IdentityAdminPart`
+
+`IdentityAdminPart` exposes one `Disable*` parameter per tab. All of them default to `false`, so by
+default every section is available. Set one to `true` and the tab disappears from the shell and its
+screen is never rendered:
+
+```razor
+@* An admin shell without the app related screens and without the maintenance tab *@
+<CMouss.IdentityFramework.BlazorUI.Admin.IdentityAdminPart DefaultTab="users"
+                                                          DisableApps="true"
+                                                          DisableAppPermissions="true"
+                                                          DisableAppAccesses="true"
+                                                          DisableSystem="true" />
+```
+
+| Parameter | Tab hidden | Component not rendered |
+|---|---|---|
+| `DisableUsers` | Users | `UsersManagerPart` |
+| `DisableRoles` | Roles | `RolesManagerPart` |
+| `DisableEntities` | Entities | `EntitiesManagerPart` |
+| `DisableActions` | Actions | `PermissionTypesManagerPart` |
+| `DisablePermissions` | Permissions | `PermissionsManagerPart` |
+| `DisableApps` | Apps | `AppsManagerPart` |
+| `DisableAppPermissions` | App permissions | `AppPermissionTypesManagerPart` |
+| `DisableAppAccesses` | App accesses | `AppAccessManagerPart` |
+| `DisableUserTokens` | User tokens | `UserTokensManagerPart` |
+| `DisableAttributes` | Attributes | `AttributeTypesManagerPart` |
+| `DisableSystem` | System | `MaintenancePart` |
+
+Notes:
+
+- When `DefaultTab` points to a disabled (or unknown) tab, the first tab still enabled is opened
+  instead, so the component never starts on a hidden screen.
+- The parameters are re-evaluated on every render, so they can be bound to your own state. Disabling
+  the tab currently open moves the selection to the first enabled one.
+- When every section is disabled the component renders a short "Nothing to manage" notice.
+- This only removes the screens from **this** shell. It is a UI convenience, not an authorization
+  mechanism: the individual `...ManagerPart` components can still be hosted directly, and the
+  underlying `IDFManager` services are unchanged. Use `IDFBlazorUIAdminConfig.AdminRoleIds` (and
+  `AllowDeleteOperations` / `AllowRevealSecrets`) for the actual access control.
+
 ## Authorization
 
 Each component resolves the signed in user by itself:
